@@ -55,7 +55,7 @@ class SuperAdminController extends BaseController
         }
 
         $data = [
-            'title'             => 'Dashboard Admin - CargoWing',
+            'title'             => 'Dashboard Admin - RAILOG',
             'currentPage'       => 'dashboard',
             'judul'             => 'Dashboard',
             'subJudul'          => 'Ringkasan informasi penting',

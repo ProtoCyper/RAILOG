@@ -83,7 +83,7 @@ class AdminController extends BaseController
         }
 
         $data = [
-            'title'             => 'Dashboard Admin - CargoWing',
+            'title'             => 'Dashboard Admin - RAILOG',
             'currentPage'       => 'dashboard',
             'judul'             => 'Dashboard',
             'subJudul'          => 'Selamat datang di dashboard',
@@ -100,7 +100,7 @@ class AdminController extends BaseController
     public function indexSuperAdmin()
     {
         $data = [
-            'title' => 'Dashboard Super Admin - CargoWing',
+            'title' => 'Dashboard Super Admin - RAILOG',
         ];
         return view('superadmin/dashboard', $data);
     }
@@ -111,7 +111,7 @@ class AdminController extends BaseController
         $admin = $this->adminModel->find($dataAdmin);
 
         $data = [
-            'title'       => 'Profil Admin - CargoWing',
+            'title'       => 'Profil Admin - RAILOG',
             'currentPage' => 'profil',
             'judul'       => 'Profil',
             'subJudul'    => 'Pengaturan Akun',
@@ -188,7 +188,7 @@ class AdminController extends BaseController
             ->findAll();
 
         $data = [
-            'title'      => 'Kelola Barang Admin - CargoWing',
+            'title'      => 'Kelola Barang Admin - RAILOG',
             'currentPage' => 'kelolabarang',
             'judul'      => 'Kelola Barang',
             'subJudul'   => 'Manajemen Data Barang',
@@ -347,7 +347,7 @@ class AdminController extends BaseController
             ->paginate($perPage, 'number');
 
         $data = [
-            'title'       => 'Kelola Staff - CargoWing',
+            'title'       => 'Kelola Staff - RAILOG',
             'currentPage' => 'kelolaStaff',
             'judul'       => 'Kelola Staff',
             'subJudul'    => 'Manajemen Data Staff',
@@ -554,7 +554,7 @@ class AdminController extends BaseController
             ->findAll();
 
         $data = [
-            'title'       => 'Laporan Barang - CargoWing',
+            'title'       => 'Laporan Barang - RAILOG',
             'currentPage' => 'laporan',
             'judul'       => 'Laporan Barang',
             'subJudul'    => 'Riwayat Laporan Barang',

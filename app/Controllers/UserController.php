@@ -49,7 +49,7 @@ class UserController extends BaseController
             ->limit(10)
             ->findAll();
         $data = [
-            'title' => 'Dashboard User - CargoWing',
+            'title' => 'Dashboard User - RAILOG',
             'currentPage' => 'dashboard',
             'totalMasuk' => $totalMasuk,
             'totalDipakai' => $totalDipakai,
@@ -96,7 +96,7 @@ class UserController extends BaseController
             ->findAll();
 
         $data = [
-            'title'      => 'Kelola Barang User - CargoWing',
+            'title'      => 'Kelola Barang User - RAILOG',
             'currentPage' => 'kelolabarang',
             'user'       => $user,
             'keyword'    => $keyword,
@@ -241,7 +241,7 @@ class UserController extends BaseController
         $user = $this->userModel->find($dataUser);
 
         $data = [
-            'title' => 'Informasi Barang - CargoWing',
+            'title' => 'Informasi Barang - RAILOG',
             'currentPage' => 'kelolabarang',
             'user' => $user,
             'barang' => $barang
@@ -446,7 +446,7 @@ class UserController extends BaseController
             ->findAll();
 
         $data = [
-            'title'        => 'Riwayat - CargoWing',
+            'title'        => 'Riwayat - RAILOG',
             'currentPage'  => 'riwayat',
             'user'         => $user,
             'riwayatData'  => $riwayatData,
@@ -1146,7 +1146,7 @@ class UserController extends BaseController
         $user = $this->userModel->find($dataUser);
 
         $data = [
-            'title' => 'Profil User - CargoWing',
+            'title' => 'Profil User - RAILOG',
             'user' => $user,
             'currentPage' => 'profil',
             'notif' => $this->notifikasiModel->getUnreadNotif(5)
