@@ -1,0 +1,33 @@
+.error-text {
+  color: #e53935; /* Merah terang */
+  margin-top: -8px; /* Mepet ke input di atasnya */
+  margin-bottom: 8px; /* Jarak ke input berikutnya */
+  font-size: 0.88em;
+  display: block;
+  padding-left: 2px;
+}
+
+.error-message,
+.success-message {
+  margin-bottom: 18px;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.success-message {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
