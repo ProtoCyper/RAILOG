@@ -9,7 +9,7 @@
     <div class="header-content">
       <div class="header-title">
         <h1>Dashboard</h1>
-        <p>Selamat datang kembalii, <?= esc($superAdmin['nama']) ?>! Berikut aktivitas hari ini.</p>
+        <p>Selamat datang kembali, <?= esc($superAdmin['nama']) ?>! Berikut aktivitas hari ini.</p>
       </div>
       <div class="header-actions">
         <div class="user-profile">
