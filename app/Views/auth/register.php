@@ -56,7 +56,7 @@
 </div>
 
 <div class="copyright">
-    © CargoWing – Powered by your logistics in flight
+    © RAILOG – Smart Logistics for Oil & Gas
 </div>
 
 <?= $this->endSection() ?>

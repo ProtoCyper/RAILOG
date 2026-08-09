@@ -58,8 +58,8 @@
     <!-- Navbar Biru Besar -->
     <header class="navbar-custom">
         <div class="flex items-center gap-3">
-            <img src="../assets/img/logo.jpg" alt="Logo CargoWing" class="w-10 h-10 rounded-full border-2 border-white">
-            <span class="text-2xl font-semibold text-white">CargoWing</span>
+            <img src="../assets/img/logo.png" alt="Logo RAILOG" class="w-10 h-10">
+            <span class="text-2xl font-semibold text-white">RAILOG</span>
         </div>
         <nav class="space-x-8">
             <a href="<?= base_url('/user/dashboard') ?>" class="navbar-link text-white hover:text-blue-300 <?= (strtolower($currentPage) === 'dashboard') ? 'active' : '' ?>">Beranda</a>
