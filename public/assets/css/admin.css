@@ -12,7 +12,7 @@ body {
 
 /* Sidebar */
 .sidebar {
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  background: #0B1F3A;
   width: 280px;
   height: 100vh;
   position: fixed;

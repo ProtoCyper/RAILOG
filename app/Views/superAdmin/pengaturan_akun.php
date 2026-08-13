@@ -62,7 +62,7 @@
                     </div>
 
                     <div class="mt-6 flex gap-3">
-                        <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded text-sm">Simpan</button>
+                        <button type="submit" style="background-color: #1565C0;" class="text-white px-4 py-2 rounded text-sm hover:opacity-90">Simpan</button>
                         <button type="reset" class="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm">Batal</button>
                     </div>
                 </form>
@@ -119,7 +119,7 @@
                     </div>
 
                     <div class="flex gap-3">
-                        <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded text-sm">Ubah</button>
+                        <button type="submit" style="background-color: #1565C0;" class="text-white px-4 py-2 rounded text-sm hover:opacity-90">Ubah</button>
                         <button type="reset" class="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm">Batal</button>
                     </div>
                 </form>

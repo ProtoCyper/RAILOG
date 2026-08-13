@@ -173,7 +173,7 @@
       </div>
       <div class="flex justify-end gap-3">
         <button type="button" id="closeModal" class="px-6 py-3 bg-gray-300 rounded-lg hover:bg-gray-400 text-base">Batal</button>
-        <button type="submit" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-base">Simpan</button>
+        <button type="submit" style="background-color: #1565C0;" class="px-6 py-3 text-white rounded-lg hover:opacity-90 text-base">Simpan</button>
       </div>
     </form>
   </div>

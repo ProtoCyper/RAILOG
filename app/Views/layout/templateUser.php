@@ -20,7 +20,7 @@
         }
 
         .navbar-custom {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            background: #0B1F3A;
             height: 80px;
             width: 100%;
             position: fixed;

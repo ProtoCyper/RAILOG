@@ -219,7 +219,8 @@
                 </button>
                 <button 
                     type="submit" 
-                    class="px-4 py-2 bg-blue-600 rounded text-white hover:bg-blue-700">
+                    style="background-color: #1565C0;"
+                    class="px-4 py-2 rounded text-white hover:opacity-90">
                     Simpan
                 </button>
             </div>

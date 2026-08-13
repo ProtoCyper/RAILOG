@@ -32,7 +32,7 @@
 
         <!-- Button -->
         <div class="mt-8 flex gap-4">
-          <button type="submit" class="bg-gray-800 text-white px-6 py-3 rounded-lg text-base font-medium hover:bg-gray-900 transition">Simpan</button>
+          <button type="submit" style="background-color: #1565C0;" class="text-white px-6 py-3 rounded-lg text-base font-medium hover:opacity-90 transition">Simpan</button>
           <button type="reset" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-base font-medium hover:bg-gray-400 transition">Batal</button>
         </div>
       </form>
@@ -98,7 +98,7 @@
         <small id="confirmPasswordError" class="error-text block mb-6"></small>
 
         <div class="flex gap-4">
-          <button type="submit" class="bg-gray-800 text-white px-6 py-3 rounded-lg text-base font-medium hover:bg-gray-900 transition">Ubah</button>
+          <button type="submit" style="background-color: #1565C0;" class="text-white px-6 py-3 rounded-lg text-base font-medium hover:opacity-90 transition">Ubah</button>
           <button type="reset" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-base font-medium hover:bg-gray-400 transition">Batal</button>
         </div>
       </form>

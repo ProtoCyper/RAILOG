@@ -229,7 +229,7 @@
 
             <!-- Tombol -->
             <div class="flex justify-end gap-3 mt-6">
-                <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 text-base">Simpan</button>
+                <button type="submit" style="background-color: #1565C0;" class="text-white px-6 py-3 rounded hover:opacity-90 text-base">Simpan</button>
                 <button type="button" onclick="closeModal('modalBarangLama')" class="bg-gray-300 text-black px-6 py-3 rounded hover:bg-gray-400 text-base">Batal</button>
             </div>
         </form>
@@ -282,12 +282,12 @@
             <div class="col-span-1 flex flex-col items-center justify-center border rounded p-6">
                 <label class="block text-base mb-3">Barcode (QR Code)</label>
                 <div id="qrcode" class="w-40 h-40 flex items-center justify-center bg-gray-100 border mb-4"></div>
-                <button type="button" onclick="generateBarcode()" class="bg-gray-800 text-white px-6 py-3 rounded mb-3 text-base">Generate</button>
+                <button type="button" onclick="generateBarcode()" style="background-color: #1565C0;" class="text-white px-6 py-3 rounded mb-3 text-base hover:opacity-90">Generate</button>
                 <input type="text" name="barcode" id="barcodeInput" class="w-full border rounded px-4 py-3 text-center text-base" readonly required>
             </div>
             <!-- Tombol -->
             <div class="col-span-3 flex justify-end gap-3 mt-6">
-                <button type="submit" class="bg-gray-800 text-white px-6 py-3 rounded text-base">Tambah</button>
+                <button type="submit" style="background-color: #1565C0;" class="text-white px-6 py-3 rounded text-base hover:opacity-90">Tambah</button>
                 <button type="button" onclick="closeModal('modalTambah')" class="bg-gray-300 text-black px-6 py-3 rounded text-base">Batal</button>
             </div>
         </form>
@@ -321,7 +321,7 @@
                 <input type="date" name="tanggal" id="tanggal" class="w-full border rounded px-4 py-3 text-base" required>
             </div>
             <div class="col-span-2 flex justify-end gap-3 mt-6">
-                <button type="submit" class="bg-gray-800 text-white px-6 py-3 rounded hover:bg-gray-900 text-base">Simpan</button>
+                <button type="submit" style="background-color: #1565C0;" class="text-white px-6 py-3 rounded hover:opacity-90 text-base">Simpan</button>
                 <button type="button" onclick="closeModal('modalKeluar')" class="bg-gray-300 text-black px-6 py-3 rounded hover:bg-gray-400 text-base">Batal</button>
             </div>
         </form>
