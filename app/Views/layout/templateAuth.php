@@ -26,7 +26,7 @@
 
     <div class="auth-container">
         <div class="logo">
-            <div class="logo-icon">R</div>
+            <img src="<?= base_url('../assets/img/logo.png') ?>" alt="RAILOG Logo" class="logo-image">
             <div class="logo-text">
                 <h3>RAILOG</h3>
                 <p>INDUSTRIAL SYSTEMS</p>
