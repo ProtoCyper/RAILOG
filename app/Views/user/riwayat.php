@@ -374,12 +374,12 @@
     <div class="page-content">
         <!-- Flash Messages -->
         <?php if (session()->getFlashdata('error')): ?>
-            <div style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem;">
+            <div class="flash-alert" style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem; transition: opacity 0.5s ease;">
                 <?= session()->getFlashdata('error'); ?>
             </div>
         <?php endif; ?>
         <?php if (session()->getFlashdata('success')): ?>
-            <div style="background: #d1fae5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem;">
+            <div class="flash-alert" style="background: #d1fae5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem; transition: opacity 0.5s ease;">
                 <?= session()->getFlashdata('success'); ?>
             </div>
         <?php endif; ?>
@@ -807,6 +807,14 @@ document.querySelectorAll('.btn-hapus').forEach(btn => {
             this.closest('form').submit();
         }
     });
+});
+
+// Auto-hide flash messages after 5 seconds
+document.querySelectorAll('.flash-alert').forEach(el => {
+    setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 500);
+    }, 5000);
 });
 </script>
 
