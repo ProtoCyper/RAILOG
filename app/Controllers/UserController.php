@@ -132,6 +132,9 @@ class UserController extends BaseController
         $dataUser = session()->get('id_user');
         $user     = $this->userModel->find($dataUser);
 
+        // AUTO-SYNC: Sinkronkan stok barang dari laporan agar konsisten
+        $this->syncStokBarangSilent();
+
         // Ambil jumlah per halaman (default 10)
         $perPage  = $this->request->getVar('per_page') ?? 10;
         // Ambil keyword pencarian
@@ -236,11 +239,6 @@ class UserController extends BaseController
             return redirect()->back()->with('error', 'Tidak ada perubahan data.');
         }
 
-        // Deteksi perubahan jumlah
-        $jumlahLama = (int) $barangLama['jumlah'];
-        $jumlahBaru = (int) $data['jumlah'];
-        $selisihJumlah = $jumlahBaru - $jumlahLama;
-
         $db->transStart();
 
         // Update barang
@@ -248,20 +246,6 @@ class UserController extends BaseController
             $db->transRollback();
             $error = $this->barangModel->errors();
             return redirect()->back()->withInput()->with('error', 'Gagal memperbarui barang. ' . json_encode($error));
-        }
-
-        // Jika jumlah berubah, catat ke laporan agar konsisten
-        if ($selisihJumlah !== 0) {
-            $now = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
-            $jenisLaporan = $selisihJumlah > 0 ? 'Masuk' : 'Dipakai';
-            $this->laporanModel->insert([
-                'id_barang'  => $id_barang,
-                'jumlah'     => abs($selisihJumlah),
-                'jenis'      => $jenisLaporan,
-                'tanggal'    => $now->format('Y-m-d H:i:s'),
-                'id_user'    => session()->get('id_user'),
-                'keterangan' => 'Penyesuaian stok dari edit barang di Kelola Barang',
-            ]);
         }
 
         // Notif stok minimum
@@ -467,6 +451,9 @@ class UserController extends BaseController
         $dataUser = session()->get('id_user');
         $user     = $this->userModel->find($dataUser);
 
+        // AUTO-SYNC: Sinkronkan stok barang dari laporan agar konsisten
+        $this->syncStokBarangSilent();
+
         // Ambil jumlah per halaman (default 10)
         $perPage  = $this->request->getVar('per_page') ?? 10;
         // Ambil keyword pencarian
@@ -479,7 +466,7 @@ class UserController extends BaseController
 
         // Query dasar untuk riwayat
         $riwayatQuery = $this->laporanModel
-            ->select('laporan.tanggal, laporan.jumlah, laporan.jenis, users.nama, barang.nama_barang, laporan.id_laporan')
+            ->select('laporan.tanggal, laporan.jumlah, laporan.jenis, laporan.id_barang, users.nama, barang.nama_barang, laporan.id_laporan')
             ->join('users', 'users.id_user = laporan.id_user')
             ->join('barang', 'barang.id_barang = laporan.id_barang');
 
@@ -544,7 +531,7 @@ class UserController extends BaseController
 
         // Ambil semua nama barang unik langsung dari tabel barang
         $uniqueBarang = $this->barangModel
-            ->select('nama_barang')
+            ->select('id_barang, nama_barang')
             ->distinct()
             ->orderBy('nama_barang', 'ASC')
             ->findAll();
@@ -860,45 +847,28 @@ class UserController extends BaseController
             return redirect()->back()->with('error', 'Data laporan tidak ditemukan.');
         }
 
-        // Ambil data barang saat ini
-        $barang = $this->barangModel->find($laporan['id_barang']);
-        if (!$barang) {
+        if (!$this->barangModel->find($laporan['id_barang'])) {
             return redirect()->back()->with('error', 'Barang terkait tidak ditemukan.');
         }
 
         $db->transStart();
 
-        // Rollback efek stok dari laporan yang akan dihapus
-        $stokBaru = (int) $barang['jumlah'];
-        if (strtolower($laporan['jenis']) === 'masuk') {
-            // Laporan masuk dihapus = stok berkurang
-            $stokBaru -= (int) $laporan['jumlah'];
-        } elseif (strtolower($laporan['jenis']) === 'dipakai') {
-            // Laporan dipakai dihapus = stok kembali bertambah
-            $stokBaru += (int) $laporan['jumlah'];
+        // Hapus laporan dulu (raw query, tidak melalui entity)
+        $db->table('laporan')->where('id_laporan', (int) $idLaporan)->delete();
+
+        // Hitung ulang stok dari laporan (sumber kebenaran)
+        $stokBaru = $this->hitungStokDariLaporan((int) $laporan['id_barang']);
+        $db->table('barang')->where('id_barang', (int) $laporan['id_barang'])->update(['jumlah' => $stokBaru]);
+
+        logAktivitas(" Menghapus riwayat laporan: {$laporan['nama_barang']} (Jumlah: {$laporan['jumlah']} {$laporan['satuan']})");
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Gagal menghapus riwayat.');
         }
 
-        if ($stokBaru < 0) {
-            $stokBaru = 0;
-        }
-
-        $this->barangModel->update($laporan['id_barang'], ['jumlah' => $stokBaru]);
-
-        // Hapus data laporan
-        if ($this->laporanModel->delete($idLaporan)) {
-            logAktivitas(" Menghapus riwayat laporan: {$laporan['nama_barang']} (Jumlah: {$laporan['jumlah']} {$laporan['satuan']})");
-
-            $db->transComplete();
-
-            if ($db->transStatus() === false) {
-                return redirect()->back()->with('error', 'Gagal menghapus riwayat.');
-            }
-
-            return redirect()->back()->with('success', 'Riwayat berhasil dihapus.');
-        }
-
-        $db->transRollback();
-        return redirect()->back()->with('error', 'Gagal menghapus riwayat.');
+        return redirect()->back()->with('success', 'Riwayat berhasil dihapus.');
     }
 
 
@@ -909,10 +879,14 @@ class UserController extends BaseController
         // Ambil nama barang dari input
         $namaBarang = $this->request->getPost('nama_barang');
 
-        // Cari ID barang dari tabel barang
-        $barang = $this->barangModel
-            ->where('nama_barang', $namaBarang)
-            ->first();
+        // Cari ID barang dari tabel barang (barang target / barang baru)
+        // Pakai id_barang jika dikirim, fallback ke nama_barang
+        $idBarangPost = $this->request->getPost('id_barang');
+        if (!empty($idBarangPost)) {
+            $barang = $this->barangModel->find((int) $idBarangPost);
+        } else {
+            $barang = $this->barangModel->where('nama_barang', $namaBarang)->first();
+        }
 
         if (!$barang) {
             return redirect()->to(base_url('user/riwayat'))
@@ -927,18 +901,10 @@ class UserController extends BaseController
                 ->with('error', 'Data laporan tidak ditemukan.');
         }
 
-        // Ambil barang lama terkait (sebelum diedit)
-        $barangLama = $this->barangModel->find($existingData['id_barang']);
-        if (!$barangLama) {
-            return redirect()->to(base_url('user/riwayat'))
-                ->with('error', 'Barang pada laporan tidak ditemukan.');
-        }
-
-        // Data baru yang akan diupdate dengan timezone Jakarta
+        // Data baru
         $now = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
         $tanggalPost = $this->request->getPost('tanggal');
         if (!empty($tanggalPost)) {
-            // datetime-local format: YYYY-MM-DDTHH:MM -> convert to YYYY-MM-DD HH:MM:SS
             $tanggalPost = str_replace('T', ' ', $tanggalPost);
             if (strlen($tanggalPost) === 16) {
                 $tanggalPost .= ':00';
@@ -948,40 +914,30 @@ class UserController extends BaseController
         $newData = [
             'tanggal'   => $tanggalPost ?? $now->format('Y-m-d H:i:s'),
             'jumlah'    => (int) $this->request->getPost('jumlah'),
-            'jenis'     => $this->request->getPost('jenis'),
-            'id_barang' => $barang['id_barang'],
+            'jenis'     => ucfirst(strtolower($this->request->getPost('jenis'))),
+            'id_barang' => (int) $barang['id_barang'],
             'id_user'   => session()->get('id_user'),
         ];
 
-        // Normalisasi jenis (case-insensitive handling)
-        $jenisBaru = ucfirst(strtolower($newData['jenis']));
-        $jenisLama = $existingData['jenis'];
-        $newData['jenis'] = $jenisBaru;
+        $idBarangBaru = $newData['id_barang'];
+        $idBarangLama = (int) $existingData['id_barang'];
+        $jenisBaru    = $newData['jenis'];
+        $jenisLama    = ucfirst(strtolower($existingData['jenis']));
+        $jumlahBaru   = $newData['jumlah'];
+        $jumlahLama   = (int) $existingData['jumlah'];
 
-        // Hitung stok tersedia setelah rollback efek laporan lama pada barang TARGET
-        // (barang yang akan dipakai setelah edit)
-        $stokTersedia = (int) $barang['jumlah'];
-        // rollback efek laporan lama pada barang target (jika id_barang tidak berubah, ini identik dengan barang saat ini)
-        if ((int)$existingData['id_barang'] === (int)$barang['id_barang']) {
-            if (strtolower($jenisLama) === 'masuk') {
-                $stokTersedia -= (int) $existingData['jumlah'];
-            } elseif (strtolower($jenisLama) === 'dipakai') {
-                $stokTersedia += (int) $existingData['jumlah'];
-            }
-        }
-
-        // Validasi: stok cukup untuk jenis Dipakai (menghitung stok setelah rollback)
-        if ($jenisBaru === 'Dipakai' && $newData['jumlah'] > $stokTersedia) {
+        // Validasi jenis sesuai ENUM
+        if (!in_array($jenisBaru, ['Masuk', 'Dipakai'], true)) {
             return redirect()->to(base_url('user/riwayat'))
-                ->with('error', 'Stok barang tidak mencukupi untuk jenis Dipakai. Stok tersedia: ' . $stokTersedia);
+                ->with('error', 'Jenis tidak valid. Harus Masuk atau Dipakai.');
         }
 
         // Cek apakah ada perubahan data
         $isUnchanged = (
             $existingData['tanggal'] == $newData['tanggal'] &&
-            (int)$existingData['jumlah'] === $newData['jumlah'] &&
-            strtolower($existingData['jenis']) === strtolower($newData['jenis']) &&
-            (int)$existingData['id_barang'] === (int)$newData['id_barang']
+            $jumlahLama === $jumlahBaru &&
+            strtolower($jenisLama) === strtolower($jenisBaru) &&
+            $idBarangLama === $idBarangBaru
         );
 
         if ($isUnchanged) {
@@ -989,64 +945,63 @@ class UserController extends BaseController
                 ->with('error', 'Tidak ada yang diperbarui.');
         }
 
-        // Mulai transaksi untuk konsistensi stok
+        // ============================================================
+        // STRATEGI: Laporan adalah SUMBER KEBENARAN.
+        // Update laporan dengan query builder langsung (tanpa entity caching).
+        // ============================================================
         $db->transStart();
 
-        $idBarangBaru = (int) $newData['id_barang'];
-        $idBarangLama = (int) $existingData['id_barang'];
-        $isBarangBerubah = $idBarangBaru !== $idBarangLama;
+        // 1) Update laporan langsung via query builder agar PASTI tersimpan
+        $db->table('laporan')
+            ->where('id_laporan', (int) $idLaporan)
+            ->update([
+                'id_barang' => $idBarangBaru,
+                'jumlah'    => $jumlahBaru,
+                'jenis'     => $jenisBaru,
+                'tanggal'   => $newData['tanggal'],
+                'id_user'   => $newData['id_user'],
+            ]);
 
-        // === ROLLBACK efek stok di barang LAMA ===
-        if ($isBarangBerubah) {
-            // Barang berubah: rollback di barang lama
-            $stokBarangLamaRollback = (int) $barangLama['jumlah'];
-            if (strtolower($jenisLama) === 'masuk') {
-                $stokBarangLamaRollback -= (int) $existingData['jumlah'];
-            } elseif (strtolower($jenisLama) === 'dipakai') {
-                $stokBarangLamaRollback += (int) $existingData['jumlah'];
-            }
-            if ($stokBarangLamaRollback < 0) $stokBarangLamaRollback = 0;
-            $this->barangModel->update($idBarangLama, ['jumlah' => $stokBarangLamaRollback]);
+        // 2) Hitung ulang stok untuk barang target dari laporan (sumber kebenaran)
+        $stokBarangBaru = $this->hitungStokDariLaporan($idBarangBaru);
 
-            // Stok untuk barang baru adalah stok awalnya (tidak ada efek lama di sini)
-            $stokBaru = (int) $barang['jumlah'];
-        } else {
-            // Barang sama: rollback di stok awal
-            $stokBaru = (int) $barang['jumlah'];
-            if (strtolower($jenisLama) === 'masuk') {
-                $stokBaru -= (int) $existingData['jumlah'];
-            } elseif (strtolower($jenisLama) === 'dipakai') {
-                $stokBaru += (int) $existingData['jumlah'];
+        // 3) Jika barang berubah, hitung ulang juga stok barang lama
+        if ($idBarangBaru !== $idBarangLama) {
+            $stokBarangLama = $this->hitungStokDariLaporan($idBarangLama);
+            if ($stokBarangLama < 0) {
+                $db->transRollback();
+                return redirect()->to(base_url('user/riwayat'))
+                    ->with('error', 'Operasi ini akan membuat stok barang asal menjadi negatif.');
             }
+            $db->table('barang')
+                ->where('id_barang', $idBarangLama)
+                ->update(['jumlah' => $stokBarangLama]);
         }
 
-        // === APPLY efek stok di barang BARU ===
-        if ($jenisBaru === 'Masuk') {
-            $stokBaru += $newData['jumlah'];
-        } elseif ($jenisBaru === 'Dipakai') {
-            $stokBaru -= $newData['jumlah'];
+        // 4) Validasi stok barang target untuk jenis Dipakai
+        if ($jenisBaru === 'Dipakai' && $stokBarangBaru < 0) {
+            $db->transRollback();
+            return redirect()->to(base_url('user/riwayat'))
+                ->with('error', 'Stok barang tidak mencukupi untuk jenis Dipakai.');
         }
 
-        if ($stokBaru < 0) $stokBaru = 0;
+        // 5) Update stok barang target (query builder langsung)
+        $db->table('barang')
+            ->where('id_barang', $idBarangBaru)
+            ->update(['jumlah' => $stokBarangBaru]);
 
-        // Update stok barang target
-        $this->barangModel->update($idBarangBaru, ['jumlah' => $stokBaru]);
-
-        // Update data laporan
-        $this->laporanModel->update($idLaporan, $newData);
-
-        // Notifikasi jika stok minimum
+        // Notifikasi stok minimum
         $barangSekarang = $this->barangModel->find($idBarangBaru);
-        if ($barangSekarang && (int)$stokBaru <= (int)$barangSekarang['minimum_stok']) {
+        if ($barangSekarang && (int)$stokBarangBaru <= (int)$barangSekarang['minimum_stok']) {
             $this->notifikasiModel->save([
-                'pesan'  => "Stok {$barangSekarang['nama_barang']} tersisa {$stokBaru} (minimum: {$barangSekarang['minimum_stok']})⚠️",
+                'pesan'  => "Stok {$barangSekarang['nama_barang']} tersisa {$stokBarangBaru} (minimum: {$barangSekarang['minimum_stok']})�️",
                 'status' => 'unread'
             ]);
         }
 
-        // ✅ Tambahkan log aktivitas
+        // Log aktivitas
         $namaUser = session()->get('nama');
-        logAktivitas("{$namaUser} Mengedit riwayat laporan. Barang: {$namaBarang}, Jumlah: {$newData['jumlah']}, Jenis: {$jenisBaru}");
+        logAktivitas("{$namaUser} Mengedit riwayat laporan. Barang: {$namaBarang}, Jumlah: {$jumlahBaru}, Jenis: {$jenisBaru}");
 
         $db->transComplete();
 
@@ -1056,7 +1011,26 @@ class UserController extends BaseController
         }
 
         return redirect()->to(base_url('user/riwayat'))
-            ->with('success', 'Data riwayat berhasil diperbarui.');
+            ->with('success', "Data riwayat berhasil diperbarui. Stok {$namaBarang} sekarang: {$stokBarangBaru}");
+    }
+
+    /**
+     * Hitung stok barang dari total mutasi laporan.
+     * Sumber kebenaran = tabel laporan.
+     * @return int
+     */
+    private function hitungStokDariLaporan(int $idBarang): int
+    {
+        $db = \Config\Database::connect();
+        $row = $db->table('laporan')
+            ->select('SUM(CASE WHEN LOWER(jenis) = "masuk" THEN jumlah ELSE 0 END) AS total_masuk,
+                      SUM(CASE WHEN LOWER(jenis) = "dipakai" THEN jumlah ELSE 0 END) AS total_dipakai')
+            ->where('id_barang', $idBarang)
+            ->get()->getRowArray();
+
+        $masuk   = (int) ($row['total_masuk'] ?? 0);
+        $dipakai = (int) ($row['total_dipakai'] ?? 0);
+        return max(0, $masuk - $dipakai);
     }
 
     /**
@@ -1064,6 +1038,18 @@ class UserController extends BaseController
      * stok = SUM(jumlah where jenis='Masuk') - SUM(jumlah where jenis='Dipakai')
      */
     public function syncStokBarang()
+    {
+        $updated = $this->syncStokBarangSilent();
+
+        return redirect()->to(base_url('user/riwayat'))
+            ->with('success', "Sinkronisasi selesai. {$updated} data barang diperbarui.");
+    }
+
+    /**
+     * Sinkronisasi stok tanpa redirect. Dipanggil otomatis saat halaman diakses.
+     * @return int Jumlah barang yang diperbarui
+     */
+    private function syncStokBarangSilent(): int
     {
         $db = \Config\Database::connect();
         $db->transStart();
@@ -1093,9 +1079,7 @@ class UserController extends BaseController
         }
 
         $db->transComplete();
-
-        return redirect()->to(base_url('user/riwayat'))
-            ->with('success', "Sinkronisasi selesai. {$updated} data barang diperbarui.");
+        return $updated;
     }
 
     public function printRiwayat($id_laporan)
@@ -1538,6 +1522,6 @@ class UserController extends BaseController
     public function logout()
     {
         session()->destroy();
-        return redirect()->to(base_url('/'));
+        return redirect()->to(base_url('/'))->with('success', 'Anda telah berhasil logout.');
     }
 }

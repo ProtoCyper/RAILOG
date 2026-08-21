@@ -26,6 +26,9 @@ class BarangModel extends Model
     // Jika tidak menggunakan timestamps, bisa di-nonaktifkan
     protected $useTimestamps = false;
 
+    // Penting: selalu tulis jumlah meskipun nilai tampak sama agar sinkronisasi stok terjamin
+    protected bool $updateOnlyChanged = false;
+
     // Validation (opsional, bisa diisi jika ingin validasi model)
     protected $validationRules      = [];
     protected $validationMessages   = [];

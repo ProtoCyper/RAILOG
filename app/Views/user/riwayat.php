@@ -494,7 +494,7 @@
                                     <td><?= esc($row['nama']) ?></td>
                                     <td>
                                         <div class="action-buttons">
-                                            <button type="button" onclick="openEditModal(<?= $row['id_laporan'] ?>, '<?= esc($row['nama_barang']) ?>', '<?= esc($row['tanggal']) ?>', <?= $row['jumlah'] ?>, '<?= esc($row['jenis']) ?>')"
+                                            <button type="button" onclick="openEditModal(<?= $row['id_laporan'] ?>, <?= (int)$row['id_barang'] ?>, '<?= esc($row['nama_barang']) ?>', '<?= esc($row['tanggal']) ?>', <?= $row['jumlah'] ?>, '<?= esc($row['jenis']) ?>')"
                                                 class="icon-btn icon-btn-edit" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
@@ -517,7 +517,7 @@
                                                     </a>
                                                 </div>
                                             </div>
-                                            <form action="<?= base_url('user/hapus_riwayat/' . $row['id_laporan']) ?>" method="post" class="form-hapus" style="display: inline;">
+                                            <form action="<?= base_url('user/hapus-riwayat/' . $row['id_laporan']) ?>" method="post" class="form-hapus" style="display: inline;">
                                                 <?= csrf_field() ?>
                                                 <button type="submit" class="icon-btn icon-btn-delete btn-hapus" title="Hapus">
                                                     <i class="fas fa-trash"></i>
@@ -578,13 +578,14 @@
         <form id="editForm" method="post" class="p-6">
             <?= csrf_field() ?>
             <input type="hidden" name="id_laporan" id="editIdLaporan">
+            <input type="hidden" name="id_barang" id="editIdBarang">
             
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Barang</label>
                 <select name="nama_barang" id="editNamaBarang" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     <?php if (!empty($uniqueBarang)): ?>
                         <?php foreach ($uniqueBarang as $barang): ?>
-                            <option value="<?= esc($barang['nama_barang']) ?>"><?= esc($barang['nama_barang']) ?></option>
+                            <option value="<?= esc($barang['nama_barang']) ?>" data-id="<?= esc($barang['id_barang'] ?? '') ?>"><?= esc($barang['nama_barang']) ?></option>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </select>
@@ -642,13 +643,14 @@ filterType.addEventListener('change', toggleFields);
 toggleFields();
 
 // Edit Modal
-function openEditModal(id, namaBarang, tanggal, jumlah, jenis) {
+function openEditModal(id, idBarang, namaBarang, tanggal, jumlah, jenis) {
     document.getElementById('editModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-    
+
     document.getElementById('editIdLaporan').value = id;
+    document.getElementById('editIdBarang').value = idBarang;
     document.getElementById('editForm').action = "<?= base_url('user/edit-riwayat') ?>/" + id;
-    
+
     // Set value for select
     const selectBarang = document.getElementById('editNamaBarang');
     for (let i = 0; i < selectBarang.options.length; i++) {
@@ -657,12 +659,12 @@ function openEditModal(id, namaBarang, tanggal, jumlah, jenis) {
             break;
         }
     }
-    
+
     // Format tanggal untuk datetime-local input
     const formattedDate = tanggal.replace(' ', 'T').substring(0, 16);
     document.getElementById('editTanggal').value = formattedDate;
     document.getElementById('editJumlah').value = jumlah;
-    
+
     const selectJenis = document.getElementById('editJenis');
     for (let i = 0; i < selectJenis.options.length; i++) {
         if (selectJenis.options[i].value.toLowerCase() === jenis.toLowerCase()) {

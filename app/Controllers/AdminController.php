@@ -160,6 +160,9 @@ class AdminController extends BaseController
         $dataAdmin = session()->get('id_admin');
         $admin     = $this->adminModel->find($dataAdmin);
 
+        // AUTO-SYNC: Sinkronkan stok barang dari laporan agar konsisten
+        $this->syncStokBarangSilent();
+
         // Ambil jumlah per halaman (default 10)
         $perPage  = $this->request->getVar('per_page') ?? 10;
         // Ambil keyword pencarian
@@ -230,11 +233,6 @@ class AdminController extends BaseController
             $dataUpdate['barcode'] = $barcodeInput;
         }
 
-        // Deteksi perubahan jumlah
-        $jumlahLama = (int) $barang['jumlah'];
-        $jumlahBaru = (int) $jumlah;
-        $selisihJumlah = $jumlahBaru - $jumlahLama;
-
         $db->transStart();
 
         // --- Logging perubahan ---
@@ -244,27 +242,13 @@ class AdminController extends BaseController
 
             // kalau beda, catat
             if ($lama != $baru) {
-                $label = ucfirst(str_replace('_', ' ', $field)); // biar rapi, contoh: nama_barang -> Nama barang
+                $label = ucfirst(str_replace('_', ' ', $field));
                 $perubahan[] = "$label dari '{$lama}' menjadi '{$baru}'";
             }
         }
 
         // --- Update data ---
         $this->barangModel->update($id, $dataUpdate);
-
-        // Jika jumlah berubah, catat ke laporan agar konsisten
-        if ($selisihJumlah !== 0) {
-            $now = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
-            $jenisLaporan = $selisihJumlah > 0 ? 'Masuk' : 'Dipakai';
-            $this->laporanModel->insert([
-                'id_barang'  => $id,
-                'jumlah'     => abs($selisihJumlah),
-                'jenis'      => $jenisLaporan,
-                'tanggal'    => $now->format('Y-m-d H:i:s'),
-                'id_user'    => session()->get('id_user') ?? session()->get('id_admin'),
-                'keterangan' => 'Penyesuaian stok dari edit barang di Kelola Barang (Admin)',
-            ]);
-        }
 
         if (!empty($perubahan)) {
             $deskripsi = "Edit barang: " . implode(', ', $perubahan);
@@ -537,6 +521,10 @@ class AdminController extends BaseController
     {
         $dataAdmin = session()->get('id_admin');
         $admin     = $this->adminModel->find($dataAdmin);
+
+        // AUTO-SYNC: Sinkronkan stok barang dari laporan agar konsisten
+        $this->syncStokBarangSilent();
+
         $keyword   = $this->request->getVar('keyword');
         $filterMode = $this->request->getVar('filter_mode');
         $date       = $this->request->getVar('date');
@@ -850,6 +838,41 @@ class AdminController extends BaseController
             ->download($tempPath, null)
             ->setFileName($fileName)
             ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+    /**
+     * Sinkronisasi stok barang dari laporan (tanpa redirect).
+     * Dipanggil otomatis saat halaman Kelola Barang/Laporan diakses.
+     */
+    private function syncStokBarangSilent(): int
+    {
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $rows = $db->table('laporan')
+            ->select('id_barang,
+                SUM(CASE WHEN LOWER(jenis) = "masuk" THEN jumlah ELSE 0 END) AS total_masuk,
+                SUM(CASE WHEN LOWER(jenis) = "dipakai" THEN jumlah ELSE 0 END) AS total_dipakai')
+            ->groupBy('id_barang')
+            ->get()->getResultArray();
+
+        $stokByBarang = [];
+        foreach ($rows as $r) {
+            $stokByBarang[(int) $r['id_barang']] = max(0, (int) $r['total_masuk'] - (int) $r['total_dipakai']);
+        }
+
+        $semuaBarang = $this->barangModel->findAll();
+        $updated = 0;
+        foreach ($semuaBarang as $b) {
+            $stokHitung = $stokByBarang[(int) $b['id_barang']] ?? 0;
+            if ((int) $b['jumlah'] !== $stokHitung) {
+                $this->barangModel->update($b['id_barang'], ['jumlah' => $stokHitung]);
+                $updated++;
+            }
+        }
+
+        $db->transComplete();
+        return $updated;
     }
 
 

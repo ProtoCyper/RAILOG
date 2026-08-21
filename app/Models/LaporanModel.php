@@ -15,7 +15,7 @@ class LaporanModel extends Model
     protected $allowedFields    = ['id_barang', 'jumlah', 'jenis', 'tanggal', 'id_user'];
 
     protected bool $allowEmptyInserts = false;
-    protected bool $updateOnlyChanged = true;
+    protected bool $updateOnlyChanged = false;
 
     protected array $casts = [];
     protected array $castHandlers = [];
