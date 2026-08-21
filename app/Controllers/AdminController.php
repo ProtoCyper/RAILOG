@@ -205,6 +205,7 @@ class AdminController extends BaseController
 
     public function updateBarang($id)
     {
+        $db = \Config\Database::connect();
         $barang = $this->barangModel->find($id);
         if (!$barang) {
             return redirect()->back()->with('error', 'Data barang tidak ditemukan!');
@@ -229,6 +230,13 @@ class AdminController extends BaseController
             $dataUpdate['barcode'] = $barcodeInput;
         }
 
+        // Deteksi perubahan jumlah
+        $jumlahLama = (int) $barang['jumlah'];
+        $jumlahBaru = (int) $jumlah;
+        $selisihJumlah = $jumlahBaru - $jumlahLama;
+
+        $db->transStart();
+
         // --- Logging perubahan ---
         $perubahan = [];
         foreach ($dataUpdate as $field => $baru) {
@@ -241,30 +249,54 @@ class AdminController extends BaseController
             }
         }
 
-        if (!empty($perubahan)) {
-            $deskripsi = "Edit barang: " . implode(', ', $perubahan);
-            logAktivitas($deskripsi); // pastikan kamu punya helper/function logAktivitas()
-        }
-
         // --- Update data ---
         $this->barangModel->update($id, $dataUpdate);
+
+        // Jika jumlah berubah, catat ke laporan agar konsisten
+        if ($selisihJumlah !== 0) {
+            $now = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
+            $jenisLaporan = $selisihJumlah > 0 ? 'Masuk' : 'Dipakai';
+            $this->laporanModel->insert([
+                'id_barang'  => $id,
+                'jumlah'     => abs($selisihJumlah),
+                'jenis'      => $jenisLaporan,
+                'tanggal'    => $now->format('Y-m-d H:i:s'),
+                'id_user'    => session()->get('id_user') ?? session()->get('id_admin'),
+                'keterangan' => 'Penyesuaian stok dari edit barang di Kelola Barang (Admin)',
+            ]);
+        }
+
+        if (!empty($perubahan)) {
+            $deskripsi = "Edit barang: " . implode(', ', $perubahan);
+            logAktivitas($deskripsi);
+        }
+
+        $db->transComplete();
 
         return redirect()->back()->with('success', 'Data barang berhasil diperbarui!');
     }
 
     public function hapusBarang($id)
     {
+        $db = \Config\Database::connect();
         $barang = $this->barangModel->find($id);
 
         if (!$barang) {
             return redirect()->back()->with('error', 'Data barang tidak ditemukan!');
         }
 
+        $db->transStart();
+
+        // Hapus laporan terkait agar tidak ada data orphan
+        $this->laporanModel->where('id_barang', $id)->delete();
+
         // Hapus barang
         $this->barangModel->delete($id);
 
         // Log aktivitas langsung
         logAktivitas("Hapus barang: {$barang['nama_barang']}");
+
+        $db->transComplete();
 
         return redirect()->back()->with('success', 'Barang berhasil dihapus.');
     }

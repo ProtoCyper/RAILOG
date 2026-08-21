@@ -427,6 +427,10 @@
                                 <i class="fas fa-redo"></i>
                                 Reset
                             </a>
+                            <a href="<?= base_url('user/sync-stok') ?>" class="btn" style="background:#f59e0b;color:white;" title="Sinkronkan stok barang dengan total laporan" onclick="return confirm('Sinkronkan ulang stok barang dari total laporan?')">
+                                <i class="fas fa-sync"></i>
+                                Sync Stok
+                            </a>
                             <div class="relative" id="printDropdownWrapper">
                                 <button type="button" id="openPrintAll" class="btn btn-success">
                                     <i class="fas fa-print"></i>
@@ -643,7 +647,7 @@ function openEditModal(id, namaBarang, tanggal, jumlah, jenis) {
     document.body.style.overflow = 'hidden';
     
     document.getElementById('editIdLaporan').value = id;
-    document.getElementById('editForm').action = "<?= base_url('user/edit_riwayat') ?>/" + id;
+    document.getElementById('editForm').action = "<?= base_url('user/edit-riwayat') ?>/" + id;
     
     // Set value for select
     const selectBarang = document.getElementById('editNamaBarang');

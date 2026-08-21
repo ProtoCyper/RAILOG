@@ -66,6 +66,7 @@ $routes->group('user', ['filter' => 'auth:User'], function ($routes) {
     $routes->post('logout', 'UserController::logout');
     $routes->post('hapus-riwayat/(:num)', 'UserController::hapusRiwayat/$1');
     $routes->post('edit-riwayat/(:num)', 'UserController::editRiwayat/$1');
+    $routes->get('sync-stok', 'UserController::syncStokBarang');
     $routes->match(['get', 'post'], 'print-riwayat/(:num)', 'UserController::printRiwayat/$1');
     // Cetak riwayat (sesuai filter) - PDF/Excel
     $routes->get('riwayat/pdf', 'UserController::cetakRiwayatPDF');
