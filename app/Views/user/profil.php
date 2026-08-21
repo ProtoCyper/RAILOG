@@ -315,10 +315,7 @@
 
                 <!-- Logout Section -->
                 <div class="profile-logout-section">
-                    <form id="logoutForm" action="<?= base_url('user/logout') ?>" method="post">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="profile-btn profile-btn-danger">Logout</button>
-                    </form>
+                    <a href="<?= base_url('user/logout') ?>" id="profileLogoutBtn" class="profile-btn profile-btn-danger" style="display:block; text-align:center; text-decoration:none;">Logout</a>
                 </div>
             </div>
         </div>
@@ -342,12 +339,24 @@
         }
     }
 
-    // Confirm logout
-    document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+    // Confirm logout (sama seperti admin - menggunakan SweetAlert2)
+    document.getElementById('profileLogoutBtn')?.addEventListener('click', function(e) {
         e.preventDefault();
-        if (confirm('Apakah Anda yakin ingin logout?')) {
-            document.getElementById('logoutForm').submit();
-        }
+
+        Swal.fire({
+            title: 'Yakin ingin logout?',
+            text: 'Kamu akan keluar dari sesi sekarang.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Logout',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = this.href;
+            }
+        });
     });
 </script>
 

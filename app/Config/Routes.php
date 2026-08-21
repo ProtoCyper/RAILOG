@@ -63,7 +63,7 @@ $routes->group('user', ['filter' => 'auth:User'], function ($routes) {
     $routes->get('profil', 'UserController::profil');
     $routes->post('profil/update', 'UserController::update');
     $routes->post('profil/ganti-password', 'UserController::gantiPassword');
-    $routes->post('logout', 'UserController::logout');
+    $routes->get('logout', 'UserController::logout');
     $routes->post('hapus-riwayat/(:num)', 'UserController::hapusRiwayat/$1');
     $routes->post('edit-riwayat/(:num)', 'UserController::editRiwayat/$1');
     $routes->get('sync-stok', 'UserController::syncStokBarang');
