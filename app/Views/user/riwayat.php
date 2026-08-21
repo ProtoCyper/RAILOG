@@ -1,395 +1,807 @@
 <?= $this->extend('layout/templateUser') ?>
 <?= $this->section('content') ?>
 
-<main class="px-8 py-10 max-w-full mx-auto">
-  <h1 class="text-2xl font-bold mb-6">Laporan Barang</h1>
-  <?php if (session()->getFlashdata('error')): ?>
-    <div id="errorAlert" class="error-message mb-6">
-      <?= session()->getFlashdata('error'); ?>
-    </div>
-  <?php endif; ?>
-  <?php if (session()->getFlashdata('success')): ?>
-    <div id="successAlert" class="success-message mb-6">
-      <?= session()->getFlashdata('success'); ?>
-    </div>
-  <?php endif; ?>
-
-  <!-- Filter & Search -->
-  <div class="mb-6">
-    <form method="get" class="flex flex-wrap items-end gap-3">
-      <div>
-        <label class="block text-sm text-gray-600 mb-1">Jenis Laporan</label>
-        <select name="type" id="filterType" class="px-3 py-2 border border-gray-300 rounded text-base">
-          <option value="semua" <?= (isset($type) && $type === 'semua') ? 'selected' : '' ?>>Semua</option>
-          <option value="harian" <?= (isset($type) && $type === 'harian') ? 'selected' : '' ?>>Harian</option>
-          <option value="mingguan" <?= (isset($type) && $type === 'mingguan') ? 'selected' : '' ?>>Mingguan</option>
-          <option value="bulanan" <?= (isset($type) && $type === 'bulanan') ? 'selected' : '' ?>>Bulanan</option>
-        </select>
-      </div>
-
-      <div id="fieldHarian" class="hidden">
-        <label class="block text-sm text-gray-600 mb-1">Pilih Tanggal</label>
-        <input type="date" name="day" value="<?= esc($day ?? '') ?>" class="px-3 py-2 border border-gray-300 rounded text-base" />
-      </div>
-
-      <div id="fieldMingguan" class="hidden">
-        <label class="block text-sm text-gray-600 mb-1">Pilih Minggu</label>
-        <input type="week" name="week" value="<?= esc($week ?? '') ?>" class="px-3 py-2 border border-gray-300 rounded text-base" />
-      </div>
-
-      <div id="fieldBulanan" class="hidden">
-        <label class="block text-sm text-gray-600 mb-1">Pilih Bulan</label>
-        <input type="month" name="month" value="<?= esc($month ?? '') ?>" class="px-3 py-2 border border-gray-300 rounded text-base" />
-      </div>
-
-      <div class="ml-auto flex items-end gap-3">
-        <div>
-          <label class="block text-sm text-gray-600 mb-1">Pencarian</label>
-          <input type="text" name="keyword" value="<?= esc($keyword ?? service('request')->getVar('keyword')) ?>" placeholder="Search..." class="px-4 py-2.5 border border-gray-300 rounded w-64 focus:outline-none focus:ring focus:ring-blue-200 text-base" />
-        </div>
-        <button type="submit" class="px-4 py-3 bg-blue-500 text-white text-base rounded hover:bg-blue-600 transition">Filter</button>
-        <a href="<?= base_url('/user/riwayat') ?>" class="px-4 py-3 bg-gray-300 text-base rounded hover:bg-gray-400 transition">Reset</a>
-        <button type="button" id="openPrintAll" class="px-4 py-3 bg-green-600 text-white text-base rounded hover:bg-green-700 transition">Cetak Laporan</button>
-      </div>
-
-      <?php if (!empty($perPage)): ?>
-        <input type="hidden" name="per_page" value="<?= esc($perPage) ?>" />
-      <?php endif; ?>
-    </form>
-  </div>
-
-  <!-- Table -->
-  <div class="overflow-x-auto mb-6">
-    <table class="min-w-full text-base bg-white rounded shadow-lg">
-      <thead class="bg-gray-200 text-gray-700 font-semibold">
-        <tr>
-          <th class="p-4 text-left">No</th>
-          <th class="p-4 text-left">Waktu</th>
-          <th class="p-4 text-left">Nama Barang</th>
-          <th class="p-4 text-left">Jumlah</th>
-          <th class="p-4 text-left">Jenis</th>
-          <th class="p-4 text-left">Staff</th>
-          <th class="p-4 text-center">Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php if (!empty($riwayatData)): ?>
-          <?php foreach ($riwayatData as $index => $riwayat): ?>
-            <tr class="border-t hover:bg-gray-50">
-              <td class="p-4"><?= $index + 1 ?></td>
-              <td class="p-4"><?= date('d-m-Y H:i:s', strtotime($riwayat['tanggal'])) ?></td>
-              <td class="p-4"><?= $riwayat['nama_barang'] ?></td>
-              <td class="p-4"><?= $riwayat['jumlah'] ?></td>
-              <td class="p-4"><?= $riwayat['jenis'] ?></td>
-              <td class="p-4"><?= $riwayat['nama'] ?></td>
-              <td class="p-4 text-center space-x-2">
-                <form action="<?= base_url('user/edit-laporan/' . $riwayat['id_laporan']) ?>" method="post" class="inline">
-                  <?= csrf_field() ?>
-                  <button title="Edit" class="inline-flex items-center px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition">
-                    <i data-feather="edit" class="w-5 h-5"></i>
-                  </button>
-                </form>
-                <button type="button" data-id="<?= $riwayat['id_laporan'] ?>" class="btn-print inline-flex items-center px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded transition" title="Print">
-                  <i data-feather="printer" class="w-5 h-5"></i>
-                </button>
-                <form action="<?= base_url('user/hapus-riwayat/' . $riwayat['id_laporan']) ?>"
-                  method="post"
-                  class="form-hapus inline">
-                  <?= csrf_field() ?>
-                  <button type="submit"
-                    class="btn-hapus inline-flex items-center px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition"
-                    title="Hapus">
-                    <i data-feather="trash" class="w-5 h-5"></i>
-                  </button>
-                </form>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-        <?php else: ?>
-          <tr>
-            <td colspan="7" class="p-4 text-center">Tidak ada data riwayat.</td>
-          </tr>
-        <?php endif; ?>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Footer Pagination -->
-  <div class="flex justify-between items-center mt-6 text-base">
-    <div class="flex items-center gap-3">
-      <span>Rows per page</span>
-      <form method="get">
-        <input type="hidden" name="keyword" value="<?= esc($keyword) ?>" />
-        <input type="hidden" name="type" value="<?= esc($type ?? 'semua') ?>" />
-        <input type="hidden" name="day" value="<?= esc($day ?? '') ?>" />
-        <input type="hidden" name="week" value="<?= esc($week ?? '') ?>" />
-        <input type="hidden" name="month" value="<?= esc($month ?? '') ?>" />
-        <select name="per_page" onchange="this.form.submit()" class="border border-gray-300 px-3 py-2 rounded">
-          <option value="5" <?= ($perPage == 5) ? 'selected' : '' ?>>5</option>
-          <option value="10" <?= ($perPage == 10) ? 'selected' : '' ?>>10</option>
-          <option value="25" <?= ($perPage == 25) ? 'selected' : '' ?>>25</option>
-        </select>
-      </form>
-    </div>
-
-    <div class="flex items-center justify-center gap-3 mt-6">
-      <?php if ($pager): ?>
-        <div class="flex items-center space-x-2">
-          <?= $pager->simpleLinks('number', 'tailwind_pagination') ?>
-        </div>
-      <?php endif; ?>
-    </div>
-  </div>
-</main>
-
-<!-- Modal for Edit -->
-<div id="editModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg mx-4">
-    <h2 class="text-xl font-bold mb-6">Edit Laporan</h2>
-    <form id="editForm" method="post">
-      <?= csrf_field() ?>
-      <input type="hidden" name="id_laporan" id="editIdLaporan">
-      <div class="mb-6">
-        <label for="editNamaBarang" class="block text-base font-medium mb-2">Nama Barang</label>
-        <select name="nama_barang" id="editNamaBarang" class="w-full px-4 py-3 border rounded-lg text-base" required>
-          <option value="" disabled>Pilih Barang</option>
-          <?php foreach ($uniqueBarang as $barang): ?>
-            <option value="<?= esc($barang['nama_barang']) ?>">
-              <?= esc($barang['nama_barang']) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="mb-6">
-        <label for="editJumlah" class="block text-base font-medium mb-2">Jumlah</label>
-        <input type="number" name="jumlah" id="editJumlah" class="w-full px-4 py-3 border rounded-lg text-base" required>
-      </div>
-      <div class="mb-6">
-        <label for="editJenis" class="block text-base font-medium mb-2">Jenis</label>
-        <select name="jenis" id="editJenis" class="w-full px-4 py-3 border rounded-lg text-base" required>
-          <option value="Masuk">Masuk</option>
-          <option value="Dipakai">Dipakai</option>
-        </select>
-      </div>
-      <div class="flex justify-end gap-3">
-        <button type="button" id="closeModal" class="px-6 py-3 bg-gray-300 rounded-lg hover:bg-gray-400 text-base">Batal</button>
-        <button type="submit" style="background-color: #1565C0;" class="px-6 py-3 text-white rounded-lg hover:opacity-90 text-base">Simpan</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal for Print -->
-<div id="printModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg mx-4">
-    <h2 class="text-xl font-bold mb-6">Pilih Format Print</h2>
-    <form id="printForm" method="post" class="space-y-6">
-      <?= csrf_field() ?>
-      <input type="hidden" name="id_laporan" id="printIdLaporan">
-
-      <div>
-        <label class="block text-base font-medium mb-3">Pilih format</label>
-        <div class="grid grid-cols-2 gap-4">
-          <label class="format-card cursor-pointer border rounded-lg p-6 flex flex-col items-center justify-center transition hover:border-green-500">
-            <input type="radio" name="format" value="excel" class="hidden formatOption">
-            <img src="../assets/img/excel.png" alt="Excel" class="mb-3 opacity-70 w-12 h-12">
-            <span class="text-base font-medium">Excel</span>
-          </label>
-          <label class="format-card cursor-pointer border rounded-lg p-6 flex flex-col items-center justify-center transition hover:border-green-500">
-            <input type="radio" name="format" value="pdf" class="hidden formatOption">
-            <img src="../assets/img/pdf.png" alt="PDF" class="mb-3 opacity-70 w-12 h-12">
-            <span class="text-base font-medium">PDF</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-3 pt-3">
-        <button type="button" id="closePrintModal"
-          class="px-6 py-3 bg-gray-300 rounded-lg hover:bg-gray-400 text-base">Batal</button>
-        <button type="submit" id="btnPrint" disabled
-          class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-base">Print</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal for Print All (Filtered) -->
-<div id="printAllModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg mx-4">
-    <h2 class="text-xl font-bold mb-6">Pilih Format Cetak</h2>
-    <form id="printAllForm" method="get" action="" class="space-y-6">
-      <!-- Persist current filters as hidden inputs -->
-      <input type="hidden" name="keyword" value="<?= esc($keyword ?? '') ?>">
-      <input type="hidden" name="type" value="<?= esc($type ?? 'semua') ?>">
-      <input type="hidden" name="day" value="<?= esc($day ?? '') ?>">
-      <input type="hidden" name="week" value="<?= esc($week ?? '') ?>">
-      <input type="hidden" name="month" value="<?= esc($month ?? '') ?>">
-
-      <div>
-        <label class="block text-base font-medium mb-3">Pilih format</label>
-        <div class="grid grid-cols-2 gap-4">
-          <label class="format-card-all cursor-pointer border rounded-lg p-6 flex flex-col items-center justify-center transition hover:border-green-500">
-            <input type="radio" name="formatAll" value="excel" class="hidden formatOptionAll">
-            <img src="../assets/img/excel.png" alt="Excel" class="mb-3 opacity-70 w-12 h-12">
-            <span class="text-base font-medium">Excel</span>
-          </label>
-          <label class="format-card-all cursor-pointer border rounded-lg p-6 flex flex-col items-center justify-center transition hover:border-green-500">
-            <input type="radio" name="formatAll" value="pdf" class="hidden formatOptionAll">
-            <img src="../assets/img/pdf.png" alt="PDF" class="mb-3 opacity-70 w-12 h-12">
-            <span class="text-base font-medium">PDF</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-3 pt-3">
-        <button type="button" id="closePrintAllModal" class="px-6 py-3 bg-gray-300 rounded-lg hover:bg-gray-400 text-base">Batal</button>
-        <button type="submit" id="btnPrintAll" disabled class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-base">Print</button>
-      </div>
-    </form>
-  </div>
-
-</div>
-
 <style>
-  /* Efek highlight saat dipilih */
-  .format-card input:checked+img,
-  .format-card input:checked+img+span {
-    opacity: 1;
-  }
+    .page-wrapper {
+        margin-left: 280px;
+        background-color: #f0f2f5;
+        min-height: 100vh;
+    }
 
-  .format-card input:checked+img {
-    filter: drop-shadow(0 0 5px #22c55e);
-  }
+    .page-header {
+        background: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
 
-  .format-card:has(input:checked) {
-    border-color: #22c55e;
-    background-color: #f0fdf4;
-  }
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
 
-  .format-card-all:has(input:checked) {
-    border-color: #22c55e;
-    background-color: #f0fdf4;
-  }
+    .page-subtitle {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0.25rem 0 0 0;
+    }
+
+    .page-content {
+        padding: 2rem;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-row {
+        display: flex;
+        gap: 1rem;
+        align-items: end;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-input {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        background: white;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #4b5563;
+    }
+
+    .btn-success {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #059669;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+    /* Table Card */
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .table-card-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-card-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    /* Data Table */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table thead {
+        background: #f9fafb;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .data-table th {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+
+    .data-table th.text-center {
+        text-align: center;
+    }
+
+    .data-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f3f4f6;
+        color: #374151;
+        font-size: 0.875rem;
+        vertical-align: middle;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 0.3rem 0.85rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-masuk {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-dipakai {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .icon-btn {
+        padding: 0.5rem;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+    }
+
+    .icon-btn i {
+        width: 0.875rem;
+        height: 0.875rem;
+        font-size: 0.875rem;
+    }
+
+    .icon-btn-edit {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .icon-btn-edit:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    .icon-btn-delete {
+        background: #ef4444;
+        color: white;
+    }
+
+    .icon-btn-delete:hover {
+        background: #dc2626;
+        transform: translateY(-1px);
+    }
+
+    .icon-btn-print {
+        background: #10b981;
+        color: white;
+    }
+
+    .icon-btn-print:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+
+    /* Pagination */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .pagination-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .pagination-select {
+        border: 1px solid #d1d5db;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        background: white;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+    .pagination-links {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .pagination-links a,
+    .pagination-links span {
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        color: #374151;
+        background: white;
+        border: 1px solid #e5e7eb;
+    }
+
+    .pagination-links a:hover {
+        background: #f9fafb;
+    }
+
+    .pagination-links .active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+        color: #9ca3af;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #d1d5db;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .page-wrapper {
+            margin-left: 0;
+        }
+        .filter-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filter-group {
+            width: 100%;
+        }
+    }
 </style>
 
+<div class="page-wrapper">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Laporan Barang</h1>
+        <p class="page-subtitle">Pantau dan kelola riwayat transaksi barang gudang</p>
+    </div>
+
+    <div class="page-content">
+        <!-- Flash Messages -->
+        <?php if (session()->getFlashdata('error')): ?>
+            <div style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem;">
+                <?= session()->getFlashdata('error'); ?>
+            </div>
+        <?php endif; ?>
+        <?php if (session()->getFlashdata('success')): ?>
+            <div style="background: #d1fae5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem;">
+                <?= session()->getFlashdata('success'); ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="get">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Jenis Laporan</label>
+                        <select name="type" id="filterType" class="filter-input">
+                            <option value="semua" <?= (isset($type) && $type === 'semua') ? 'selected' : '' ?>>Semua</option>
+                            <option value="harian" <?= (isset($type) && $type === 'harian') ? 'selected' : '' ?>>Harian</option>
+                            <option value="mingguan" <?= (isset($type) && $type === 'mingguan') ? 'selected' : '' ?>>Mingguan</option>
+                            <option value="bulanan" <?= (isset($type) && $type === 'bulanan') ? 'selected' : '' ?>>Bulanan</option>
+                        </select>
+                    </div>
+
+                    <div id="fieldHarian" class="filter-group" style="display: none;">
+                        <label class="filter-label">Pilih Tanggal</label>
+                        <input type="date" name="day" value="<?= esc($day ?? '') ?>" class="filter-input" />
+                    </div>
+
+                    <div id="fieldMingguan" class="filter-group" style="display: none;">
+                        <label class="filter-label">Pilih Minggu</label>
+                        <input type="week" name="week" value="<?= esc($week ?? '') ?>" class="filter-input" />
+                    </div>
+
+                    <div id="fieldBulanan" class="filter-group" style="display: none;">
+                        <label class="filter-label">Pilih Bulan</label>
+                        <input type="month" name="month" value="<?= esc($month ?? '') ?>" class="filter-input" />
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Cari</label>
+                        <input type="text" name="keyword" value="<?= esc($keyword ?? '') ?>" placeholder="Cari barang atau staff..." class="filter-input" />
+                    </div>
+
+                        <div class="filter-buttons">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                                Filter
+                            </button>
+                            <a href="<?= current_url() ?>" class="btn btn-secondary">
+                                <i class="fas fa-redo"></i>
+                                Reset
+                            </a>
+                            <div class="relative" id="printDropdownWrapper">
+                                <button type="button" id="openPrintAll" class="btn btn-success">
+                                    <i class="fas fa-print"></i>
+                                    Cetak Laporan
+                                    <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                                </button>
+                                <div id="printDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg overflow-hidden z-50 border border-gray-200">
+                                    <a href="#" id="cetakPdf" class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition">
+                                        <i class="fas fa-file-pdf text-red-500"></i>
+                                        Cetak PDF
+                                    </a>
+                                    <a href="#" id="cetakExcel" class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition">
+                                        <i class="fas fa-file-excel text-green-500"></i>
+                                        Cetak Excel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Table Card -->
+        <div class="table-card">
+            <div class="table-card-header">
+                <h3 class="table-card-title">Daftar Laporan</h3>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal</th>
+                            <th>Nama Barang</th>
+                            <th>Jumlah</th>
+                            <th>Jenis</th>
+                            <th>Staff</th>
+                            <th class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($riwayatData)): ?>
+                            <?php $no = 1; foreach ($riwayatData as $row): ?>
+                                <tr>
+                                    <td><?= $no++ ?></td>
+                                    <td>
+                                        <?php
+                                        date_default_timezone_set('Asia/Jakarta');
+                                        echo date('d M Y, H:i', strtotime($row['tanggal']));
+                                        ?>
+                                    </td>
+                                    <td style="font-weight: 600;"><?= esc($row['nama_barang']) ?></td>
+                                    <td><?= esc($row['jumlah']) ?></td>
+                                    <td>
+                                        <?php if (strtolower($row['jenis']) === 'masuk'): ?>
+                                            <span class="badge badge-masuk">Masuk</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-dipakai">Dipakai</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?= esc($row['nama']) ?></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button type="button" onclick="openEditModal(<?= $row['id_laporan'] ?>, '<?= esc($row['nama_barang']) ?>', '<?= esc($row['tanggal']) ?>', <?= $row['jumlah'] ?>, '<?= esc($row['jenis']) ?>')"
+                                                class="icon-btn icon-btn-edit" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <div class="relative" data-dropdown-wrapper>
+                                                <button type="button" 
+                                                    onclick="toggleRowDropdown(event, <?= $row['id_laporan'] ?>)"
+                                                    class="icon-btn icon-btn-print" title="Cetak">
+                                                    <i class="fas fa-print"></i>
+                                                </button>
+                                                <div id="rowDropdown-<?= $row['id_laporan'] ?>" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg overflow-hidden z-50 border border-gray-200">
+                                                    <a href="#" onclick="printRiwayat(event, <?= $row['id_laporan'] ?>, 'pdf')" 
+                                                        class="flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 transition">
+                                                        <i class="fas fa-file-pdf text-red-500"></i>
+                                                        PDF
+                                                    </a>
+                                                    <a href="#" onclick="printRiwayat(event, <?= $row['id_laporan'] ?>, 'excel')" 
+                                                        class="flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 transition">
+                                                        <i class="fas fa-file-excel text-green-500"></i>
+                                                        Excel
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <form action="<?= base_url('user/hapus_riwayat/' . $row['id_laporan']) ?>" method="post" class="form-hapus" style="display: inline;">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="icon-btn icon-btn-delete btn-hapus" title="Hapus">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>Tidak ada data riwayat</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-wrapper">
+            <div class="pagination-info">
+                <span>Baris per halaman</span>
+                <form method="get">
+                    <input type="hidden" name="keyword" value="<?= esc($keyword ?? '') ?>" />
+                    <input type="hidden" name="type" value="<?= esc($type ?? 'semua') ?>" />
+                    <input type="hidden" name="day" value="<?= esc($day ?? '') ?>" />
+                    <input type="hidden" name="week" value="<?= esc($week ?? '') ?>" />
+                    <input type="hidden" name="month" value="<?= esc($month ?? '') ?>" />
+                    <select name="per_page" onchange="this.form.submit()" class="pagination-select">
+                        <option value="5" <?= ($perPage == 5) ? 'selected' : '' ?>>5</option>
+                        <option value="10" <?= ($perPage == 10) ? 'selected' : '' ?>>10</option>
+                        <option value="25" <?= ($perPage == 25) ? 'selected' : '' ?>>25</option>
+                    </select>
+                </form>
+            </div>
+            <div class="pagination-links">
+                <?php if ($pager): ?>
+                    <?= $pager->simpleLinks('number', 'tailwind_pagination') ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-900">Edit Laporan</h2>
+            <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        <form id="editForm" method="post" class="p-6">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id_laporan" id="editIdLaporan">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Barang</label>
+                <select name="nama_barang" id="editNamaBarang" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <?php if (!empty($uniqueBarang)): ?>
+                        <?php foreach ($uniqueBarang as $barang): ?>
+                            <option value="<?= esc($barang['nama_barang']) ?>"><?= esc($barang['nama_barang']) ?></option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal</label>
+                <input type="datetime-local" name="tanggal" id="editTanggal" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
+                <input type="number" name="jumlah" id="editJumlah" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis</label>
+                <select name="jenis" id="editJenis" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="Masuk">Masuk</option>
+                    <option value="Dipakai">Dipakai</option>
+                </select>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeEditModal()" class="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold text-sm">
+                    Batal
+                </button>
+                <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Toggle filter fields
-    const typeSelect = document.getElementById('filterType');
-    const fieldHarian = document.getElementById('fieldHarian');
-    const fieldMingguan = document.getElementById('fieldMingguan');
-    const fieldBulanan = document.getElementById('fieldBulanan');
+// Filter Type Handler
+const filterType = document.getElementById('filterType');
+const fieldHarian = document.getElementById('fieldHarian');
+const fieldMingguan = document.getElementById('fieldMingguan');
+const fieldBulanan = document.getElementById('fieldBulanan');
 
-    function refreshFilterFields() {
-      const v = typeSelect.value;
-      fieldHarian.classList.toggle('hidden', v !== 'harian');
-      fieldMingguan.classList.toggle('hidden', v !== 'mingguan');
-      fieldBulanan.classList.toggle('hidden', v !== 'bulanan');
-    }
-    refreshFilterFields();
-    typeSelect.addEventListener('change', refreshFilterFields);
+function toggleFields() {
+    const type = filterType.value;
+    fieldHarian.style.display = 'none';
+    fieldMingguan.style.display = 'none';
+    fieldBulanan.style.display = 'none';
+    
+    if (type === 'harian') fieldHarian.style.display = 'block';
+    if (type === 'mingguan') fieldMingguan.style.display = 'block';
+    if (type === 'bulanan') fieldBulanan.style.display = 'block';
+}
 
-    // Edit Modal
-    const editButtons = document.querySelectorAll('button[title="Edit"]');
-    const editModal = document.getElementById('editModal');
-    const closeModal = document.getElementById('closeModal');
-    const editForm = document.getElementById('editForm');
-    const editIdLaporan = document.getElementById('editIdLaporan');
-    const editNamaBarang = document.getElementById('editNamaBarang');
-    const editJumlah = document.getElementById('editJumlah');
-    const editJenis = document.getElementById('editJenis');
+filterType.addEventListener('change', toggleFields);
+toggleFields();
 
-    editButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
-        e.preventDefault();
-        const idLaporan = button.closest('form').action.split('/').pop();
-        const row = button.closest('tr');
-        const namaBarang = row.querySelector('td:nth-child(3)').textContent.trim();
-        const jumlah = row.querySelector('td:nth-child(4)').textContent.trim();
-        const jenis = row.querySelector('td:nth-child(5)').textContent.trim();
-
-        editIdLaporan.value = idLaporan;
-        editNamaBarang.value = namaBarang;
-        editJumlah.value = jumlah;
-        editJenis.value = jenis;
-
-        editForm.action = `<?= base_url('user/edit-riwayat') ?>/${idLaporan}`;
-        editModal.classList.remove('hidden');
-      });
-    });
-
-    closeModal.addEventListener('click', () => {
-      editModal.classList.add('hidden');
-    });
-
-    // Print Modal
-    const printButtons = document.querySelectorAll('.btn-print');
-    const printModal = document.getElementById('printModal');
-    const closePrintModal = document.getElementById('closePrintModal');
-    const printForm = document.getElementById('printForm');
-    const printIdLaporan = document.getElementById('printIdLaporan');
-    const btnPrint = document.getElementById('btnPrint');
-    const formatOptions = document.querySelectorAll('.formatOption');
-
-    printButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const idLaporan = button.getAttribute('data-id');
-        printIdLaporan.value = idLaporan;
-        btnPrint.disabled = true;
-        formatOptions.forEach(opt => opt.checked = false);
-        printForm.action = `<?= base_url('user/print-riwayat') ?>/${idLaporan}`;
-        printModal.classList.remove('hidden');
-      });
-    });
-
-    formatOptions.forEach(option => {
-      option.addEventListener('change', () => {
-        btnPrint.disabled = !document.querySelector('.formatOption:checked');
-      });
-    });
-
-    closePrintModal.addEventListener('click', () => {
-      printModal.classList.add('hidden');
-    });
-
-    // Print All (Filtered)
-    const openPrintAllBtn = document.getElementById('openPrintAll');
-    const printAllModal = document.getElementById('printAllModal');
-    const closePrintAllModal = document.getElementById('closePrintAllModal');
-    const printAllForm = document.getElementById('printAllForm');
-    const formatOptionAll = document.querySelectorAll('.formatOptionAll');
-    const btnPrintAll = document.getElementById('btnPrintAll');
-
-    if (openPrintAllBtn) {
-      openPrintAllBtn.addEventListener('click', () => {
-        // reset state
-        btnPrintAll.disabled = true;
-        formatOptionAll.forEach(opt => opt.checked = false);
-        printAllForm.action = '';
-        printAllModal.classList.remove('hidden');
-      });
-    }
-
-    formatOptionAll.forEach(opt => {
-      opt.addEventListener('change', () => {
-        if (opt.checked) {
-          // Set endpoint by selected format
-          if (opt.value === 'excel') {
-            printAllForm.action = `<?= base_url('user/riwayat/excel') ?>`;
-          } else if (opt.value === 'pdf') {
-            printAllForm.action = `<?= base_url('user/riwayat/pdf') ?>`;
-          }
-          btnPrintAll.disabled = false;
+// Edit Modal
+function openEditModal(id, namaBarang, tanggal, jumlah, jenis) {
+    document.getElementById('editModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    document.getElementById('editIdLaporan').value = id;
+    document.getElementById('editForm').action = "<?= base_url('user/edit_riwayat') ?>/" + id;
+    
+    // Set value for select
+    const selectBarang = document.getElementById('editNamaBarang');
+    for (let i = 0; i < selectBarang.options.length; i++) {
+        if (selectBarang.options[i].value === namaBarang) {
+            selectBarang.selectedIndex = i;
+            break;
         }
-      });
-    });
-
-    if (closePrintAllModal) {
-      closePrintAllModal.addEventListener('click', () => {
-        printAllModal.classList.add('hidden');
-      });
     }
-  });
+    
+    // Format tanggal untuk datetime-local input
+    const formattedDate = tanggal.replace(' ', 'T').substring(0, 16);
+    document.getElementById('editTanggal').value = formattedDate;
+    document.getElementById('editJumlah').value = jumlah;
+    
+    const selectJenis = document.getElementById('editJenis');
+    for (let i = 0; i < selectJenis.options.length; i++) {
+        if (selectJenis.options[i].value.toLowerCase() === jenis.toLowerCase()) {
+            selectJenis.selectedIndex = i;
+            break;
+        }
+    }
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal on outside click
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+
+// Print function for individual row
+function toggleRowDropdown(event, id) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Close all other dropdowns first
+    document.querySelectorAll('[id^="rowDropdown-"]').forEach(dd => {
+        if (dd.id !== 'rowDropdown-' + id) {
+            dd.classList.add('hidden');
+        }
+    });
+    
+    const dropdown = document.getElementById('rowDropdown-' + id);
+    dropdown.classList.toggle('hidden');
+}
+
+function printRiwayat(event, id, format) {
+    event.preventDefault();
+    
+    const url = "<?= base_url('user/print-riwayat') ?>/" + id;
+    
+    if (format === 'excel') {
+        // For Excel, we need to submit form with format
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        
+        const formatInput = document.createElement('input');
+        formatInput.type = 'hidden';
+        formatInput.name = 'format';
+        formatInput.value = 'excel';
+        form.appendChild(formatInput);
+        
+        // Add CSRF token
+        const csrfName = '<?= csrf_token() ?>';
+        const csrfHash = '<?= csrf_hash() ?>';
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = csrfName;
+        csrfInput.value = csrfHash;
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    } else {
+        // For PDF, open in new tab
+        window.open(url + '?format=pdf', '_blank');
+    }
+    
+    // Close dropdown
+    document.getElementById('rowDropdown-' + id)?.classList.add('hidden');
+}
+
+// Close row dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('[data-dropdown-wrapper]')) {
+        document.querySelectorAll('[id^="rowDropdown-"]').forEach(dd => {
+            dd.classList.add('hidden');
+        });
+    }
+});
+
+// Print All - Dropdown Handler
+const printDropdownWrapper = document.getElementById('printDropdownWrapper');
+const printDropdown = document.getElementById('printDropdown');
+const openPrintAllBtn = document.getElementById('openPrintAll');
+
+if (openPrintAllBtn) {
+    openPrintAllBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        printDropdown.classList.toggle('hidden');
+    });
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    if (printDropdownWrapper && !printDropdownWrapper.contains(e.target)) {
+        printDropdown?.classList.add('hidden');
+    }
+});
+
+// Build URL with filters
+function buildPrintUrl(baseUrl) {
+    const type = document.getElementById('filterType')?.value || 'semua';
+    const keyword = document.querySelector('input[name="keyword"]')?.value || '';
+    const day = document.querySelector('input[name="day"]')?.value || '';
+    const week = document.querySelector('input[name="week"]')?.value || '';
+    const month = document.querySelector('input[name="month"]')?.value || '';
+    
+    let url = baseUrl + "?type=" + encodeURIComponent(type) + "&keyword=" + encodeURIComponent(keyword);
+    if (day) url += "&day=" + day;
+    if (week) url += "&week=" + week;
+    if (month) url += "&month=" + month;
+    return url;
+}
+
+// Cetak PDF
+document.getElementById('cetakPdf')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    const url = buildPrintUrl("<?= base_url('user/riwayat/pdf') ?>");
+    window.open(url, '_blank');
+    printDropdown.classList.add('hidden');
+});
+
+// Cetak Excel
+document.getElementById('cetakExcel')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    const url = buildPrintUrl("<?= base_url('user/riwayat/excel') ?>");
+    window.location.href = url;
+    printDropdown.classList.add('hidden');
+});
+
+// Delete confirmation
+document.querySelectorAll('.btn-hapus').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (confirm('Apakah Anda yakin ingin menghapus laporan ini?')) {
+            this.closest('form').submit();
+        }
+    });
+});
 </script>
 
 <?= $this->endSection() ?>

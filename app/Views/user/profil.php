@@ -1,116 +1,354 @@
 <?= $this->extend('layout/templateUser') ?>
 <?= $this->section('content') ?>
 
-<main class="px-8 py-10 max-w-full mx-auto">
-  <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-    <!-- Informasi Akun -->
-    <div class="bg-white p-8 rounded-lg shadow-lg border">
-      <h2 class="text-xl font-bold mb-6">Informasi Akun</h2>
-      <?php if (session()->getFlashdata('error')): ?>
-        <div id="errorAlert" class="error-message mb-6">
-          <?= session()->getFlashdata('error'); ?>
-        </div>
-      <?php endif; ?>
-      <?php if (session()->getFlashdata('success')): ?>
-        <div id="successAlert" class="success-message mb-6">
-          <?= session()->getFlashdata('success'); ?>
-        </div>
-      <?php endif; ?>
-      <form action="<?= base_url('user/profil/update') ?>" method="post" enctype="multipart/form-data">
-        <div class="mb-5">
-          <label class="block text-base font-medium text-gray-700 mb-2">Nama</label>
-          <input type="text" name="nama" value="<?= $user['nama'] ?>" class="w-full border border-gray-300 px-4 py-3 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required />
-        </div>
-        <div class="mb-5">
-          <label class="block text-base font-medium text-gray-700 mb-2">Email</label>
-          <input type="email" name="email" value="<?= $user['email'] ?>" class="w-full border border-gray-300 px-4 py-3 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required />
-        </div>
-        <div class="mb-5">
-          <label class="block text-base font-medium text-gray-700 mb-2">No HP</label>
-          <input type="text" name="no_hp" value="<?= $user['no_hp'] ?>" class="w-full border border-gray-300 px-4 py-3 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required />
-        </div>
+<style>
+    /* Page Wrapper */
+    .profile-page-wrapper {
+        margin-left: 280px;
+        background-color: #f0f2f5;
+        min-height: 100vh;
+    }
 
-        <!-- Button -->
-        <div class="mt-8 flex gap-4">
-          <button type="submit" style="background-color: #1565C0;" class="text-white px-6 py-3 rounded-lg text-base font-medium hover:opacity-90 transition">Simpan</button>
-          <button type="reset" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-base font-medium hover:bg-gray-400 transition">Batal</button>
-        </div>
-      </form>
+    .profile-page-header {
+        background: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .profile-page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .profile-page-subtitle {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0.25rem 0 0 0;
+    }
+
+    .profile-content {
+        padding: 2rem;
+    }
+
+    /* Grid Layout untuk 2 Card */
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Form Card */
+    .profile-form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .profile-card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0 0 1.5rem 0;
+    }
+
+    /* Form Group */
+    .profile-form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .profile-form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-form-input {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        background: #f9fafb;
+        transition: all 0.2s;
+        box-sizing: border-box;
+    }
+
+    .profile-form-input:focus {
+        outline: none;
+        background: white;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Input Wrapper untuk Password */
+    .profile-input-wrapper {
+        position: relative;
+    }
+
+    .profile-input-wrapper .profile-form-input {
+        padding-right: 3rem;
+    }
+
+    .profile-toggle-password {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #9ca3af;
+        font-size: 1.125rem;
+        transition: color 0.2s;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+
+    .profile-toggle-password:hover {
+        color: #4b5563;
+    }
+
+    /* Buttons */
+    .profile-btn {
+        padding: 0.625rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .profile-btn-primary {
+        background: #1565C0;
+        color: white;
+    }
+
+    .profile-btn-primary:hover {
+        background: #0d4a94;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .profile-btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .profile-btn-secondary:hover {
+        background: #d1d5db;
+    }
+
+    .profile-btn-danger {
+        background: #dc2626;
+        color: white;
+        width: 100%;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .profile-btn-danger:hover {
+        background: #b91c1c;
+    }
+
+    .profile-button-group {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 2rem;
+    }
+
+    /* Alert Messages */
+    .profile-alert {
+        padding: 0.875rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        font-size: 0.875rem;
+    }
+
+    .profile-alert-error {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
+
+    .profile-alert-success {
+        background: #d1fae5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+    }
+
+    /* Logout Section */
+    .profile-logout-section {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .profile-page-wrapper {
+            margin-left: 0;
+        }
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="profile-page-wrapper">
+    <!-- Page Header -->
+    <div class="profile-page-header">
+        <h1 class="profile-page-title"><?= esc($user['nama']) ?></h1>
+        <p class="profile-page-subtitle">Kelola informasi akun dan keamanan Anda</p>
     </div>
 
-    <!-- Ganti Password -->
-    <div class="bg-white p-8 rounded-lg shadow-lg border">
-      <h2 class="text-xl font-bold mb-6">Ganti Password</h2>
-      <?php if (session()->getFlashdata('errorp')): ?>
-        <div id="errorAlert" class="error-message mb-6">
-          <?= session()->getFlashdata('errorp'); ?>
-        </div>
-      <?php endif; ?>
-      <?php if (session()->getFlashdata('successp')): ?>
-        <div id="successAlert" class="success-message mb-6">
-          <?= session()->getFlashdata('successp'); ?>
-        </div>
-      <?php endif; ?>
-      <form action="<?= base_url('user/profil/ganti-password') ?>" method="post">
-        <div class="mb-5 relative">
-          <label class="block text-base font-medium text-gray-700 mb-2">Password Lama</label>
-          <input type="password" name="password_lama" id="passwordLama" placeholder="Masukkan password lama" class="w-full border border-gray-300 px-4 py-3 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12" required />
-          <span class="toggle-password" id="togglePasswordLama" style="position:absolute;top:50px;right:16px;cursor:pointer;">
-            <svg class="icon-hide" viewBox="0 5 24 24" width="24" height="24">
-              <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z" />
-            </svg>
-            <svg class="icon-show" viewBox="0 6 24 24" width="24" height="24" style="display:none;">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12zm11 3a3 3 0 100-6 3 3 0 000 6z" fill="#888" />
-              <line x1="4" y1="4" x2="20" y2="20" stroke="#e53935" stroke-width="2" />
-            </svg>
-          </span>
-        </div>
+    <div class="profile-content">
+        <div class="profile-grid">
+            <!-- Card Informasi Akun -->
+            <div class="profile-form-card">
+                <h2 class="profile-card-title">Informasi Akun</h2>
 
-        <div class="mb-5 relative">
-          <label class="block text-base font-medium text-gray-700 mb-2">Password Baru</label>
-          <input type="password" name="password_baru" id="passwordBaru" placeholder="Masukkan password baru" class="w-full border border-gray-300 px-4 py-3 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12" required />
-          <span class="toggle-password" id="togglePasswordBaru" style="position:absolute;top:50px;right:16px;cursor:pointer;">
-            <svg class="icon-hide" viewBox="0 5 24 24" width="24" height="24">
-              <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z" />
-            </svg>
-            <svg class="icon-show" viewBox="0 6 24 24" width="24" height="24" style="display:none;">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12zm11 3a3 3 0 100-6 3 3 0 000 6z" fill="#888" />
-              <line x1="4" y1="4" x2="20" y2="20" stroke="#e53935" stroke-width="2" />
-            </svg>
-          </span>
-        </div>
-        <small id="passwordError" class="error-text block mb-3"></small>
+                <?php if (session()->getFlashdata('error')): ?>
+                    <div class="profile-alert profile-alert-error">
+                        <?= session()->getFlashdata('error'); ?>
+                    </div>
+                <?php endif; ?>
+                <?php if (session()->getFlashdata('success')): ?>
+                    <div class="profile-alert profile-alert-success">
+                        <?= session()->getFlashdata('success'); ?>
+                    </div>
+                <?php endif; ?>
 
-        <!-- Konfirmasi Password Baru -->
-        <div class="mb-5 relative">
-          <label class="block text-base font-medium text-gray-700 mb-2">Konfirmasi Password Baru</label>
-          <input type="password" name="konfirmasi_password" id="konfirmasiPassword" placeholder="Masukkan konfirmasi" class="w-full border border-gray-300 px-4 py-3 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12" required />
-          <span class="toggle-password" id="toggleKonfirmasiPassword" style="position:absolute;top:50px;right:16px;cursor:pointer;">
-            <svg class="icon-hide" viewBox="0 5 24 24" width="24" height="24">
-              <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z" />
-            </svg>
-            <svg class="icon-show" viewBox="0 6 24 24" width="24" height="24" style="display:none;">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12zm11 3a3 3 0 100-6 3 3 0 000 6z" fill="#888" />
-              <line x1="4" y1="4" x2="20" y2="20" stroke="#e53935" stroke-width="2" />
-            </svg>
-          </span>
-        </div>
-        <small id="confirmPasswordError" class="error-text block mb-6"></small>
+                <form action="<?= base_url('user/profil/update') ?>" method="post" enctype="multipart/form-data">
+                    <?= csrf_field() ?>
+                    
+                    <div class="profile-form-group">
+                        <label class="profile-form-label">Nama</label>
+                        <input type="text" name="nama" value="<?= esc($user['nama']) ?>" 
+                            class="profile-form-input" required />
+                    </div>
 
-        <div class="flex gap-4">
-          <button type="submit" style="background-color: #1565C0;" class="text-white px-6 py-3 rounded-lg text-base font-medium hover:opacity-90 transition">Ubah</button>
-          <button type="reset" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-base font-medium hover:bg-gray-400 transition">Batal</button>
-        </div>
-      </form>
+                    <div class="profile-form-group">
+                        <label class="profile-form-label">Email</label>
+                        <input type="email" name="email" value="<?= esc($user['email']) ?>" 
+                            class="profile-form-input" required />
+                    </div>
 
-      <!-- Logout -->
-      <form id="logoutForm" action="<?= base_url('user/logout') ?>" method="post" class="mt-10 flex justify-center">
-        <button type="submit" id="logoutBtn" class="bg-red-600 text-white px-8 py-4 rounded-lg text-base font-semibold hover:bg-red-700 transition shadow-md">Logout</button>
-      </form>
+                    <div class="profile-form-group">
+                        <label class="profile-form-label">No HP</label>
+                        <input type="text" name="no_hp" value="<?= esc($user['no_hp']) ?>" 
+                            class="profile-form-input" required />
+                    </div>
+
+                    <div class="profile-button-group">
+                        <button type="submit" class="profile-btn profile-btn-primary">Simpan</button>
+                        <button type="reset" class="profile-btn profile-btn-secondary">Batal</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Card Ganti Password -->
+            <div class="profile-form-card">
+                <h2 class="profile-card-title">Ganti Password</h2>
+
+                <?php if (session()->getFlashdata('errorp')): ?>
+                    <div class="profile-alert profile-alert-error">
+                        <?= session()->getFlashdata('errorp'); ?>
+                    </div>
+                <?php endif; ?>
+                <?php if (session()->getFlashdata('successp')): ?>
+                    <div class="profile-alert profile-alert-success">
+                        <?= session()->getFlashdata('successp'); ?>
+                    </div>
+                <?php endif; ?>
+
+                <form action="<?= base_url('user/profil/ganti-password') ?>" method="post">
+                    <?= csrf_field() ?>
+                    
+                    <div class="profile-form-group">
+                        <label class="profile-form-label">Password Lama</label>
+                        <div class="profile-input-wrapper">
+                            <input type="password" name="password_lama" id="passwordLama" 
+                                placeholder="Masukkan password lama" 
+                                class="profile-form-input" required />
+                            <button type="button" class="profile-toggle-password" onclick="togglePassword('passwordLama', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="profile-form-group">
+                        <label class="profile-form-label">Password Baru</label>
+                        <div class="profile-input-wrapper">
+                            <input type="password" name="password_baru" id="passwordBaru" 
+                                placeholder="Masukkan password baru" 
+                                class="profile-form-input" required />
+                            <button type="button" class="profile-toggle-password" onclick="togglePassword('passwordBaru', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="profile-form-group">
+                        <label class="profile-form-label">Konfirmasi Password Baru</label>
+                        <div class="profile-input-wrapper">
+                            <input type="password" name="konfirmasi_password" id="konfirmasiPassword" 
+                                placeholder="Masukkan konfirmasi" 
+                                class="profile-form-input" required />
+                            <button type="button" class="profile-toggle-password" onclick="togglePassword('konfirmasiPassword', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="profile-button-group">
+                        <button type="submit" class="profile-btn profile-btn-primary">Ubah</button>
+                        <button type="reset" class="profile-btn profile-btn-secondary">Batal</button>
+                    </div>
+                </form>
+
+                <!-- Logout Section -->
+                <div class="profile-logout-section">
+                    <form id="logoutForm" action="<?= base_url('user/logout') ?>" method="post">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="profile-btn profile-btn-danger">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</main>
+</div>
 
-<!-- Tambahkan SweetAlert2 CDN sebelum penutup body -->
+<script>
+    // Toggle password visibility
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        const icon = button.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Confirm logout
+    document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (confirm('Apakah Anda yakin ingin logout?')) {
+            document.getElementById('logoutForm').submit();
+        }
+    });
+</script>
 
 <?= $this->endSection() ?>

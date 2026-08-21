@@ -42,12 +42,21 @@ class UserController extends BaseController
         $totalBarang = $this->barangModel->selectSum('jumlah')->get()->getRow()->jumlah;
         $barangMinimum = $this->barangModel->where('jumlah <= minimum_stok')->countAllResults();
 
+        // Get recent activity with user info
         $laporanData = $this->laporanModel
-            ->select('laporan.tanggal, barang.nama_barang, laporan.jenis, laporan.jumlah')
+            ->select('laporan.tanggal, barang.nama_barang, laporan.jenis, laporan.jumlah, users.nama as nama_user')
             ->join('barang', 'barang.id_barang = laporan.id_barang')
+            ->join('users', 'users.id_user = laporan.id_user', 'left')
             ->orderBy('laporan.tanggal', 'DESC')
-            ->limit(10)
+            ->limit(5)
             ->findAll();
+        
+        // Get low stock items (all items with low stock)
+        $lowStockItems = $this->barangModel
+            ->where('jumlah <= minimum_stok')
+            ->orderBy('jumlah', 'ASC')
+            ->findAll();
+        
         $data = [
             'title' => 'Dashboard User - RAILOG',
             'currentPage' => 'dashboard',
@@ -56,11 +65,66 @@ class UserController extends BaseController
             'totalBarang' => $totalBarang,
             'barangMinimum' => $barangMinimum,
             'laporanData' => $laporanData,
+            'lowStockItems' => $lowStockItems,
             'user' => $user,
             'notif' => $this->notifikasiModel->getUnreadNotif(5)
         ];
 
         return view('user/dashboard', $data);
+    }
+
+    public function getData()
+    {
+        // Check if user is logged in
+        if (!session()->get('logged_in')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ]);
+        }
+
+        try {
+            $totalMasuk = $this->laporanModel->where('jenis', 'Masuk')->countAllResults();
+            $totalDipakai = $this->laporanModel->where('jenis', 'Dipakai')->countAllResults();
+            $totalBarang = $this->barangModel->selectSum('jumlah')->get()->getRow()->jumlah ?? 0;
+            $barangMinimum = $this->barangModel->where('jumlah <= minimum_stok')->countAllResults();
+
+            // Get recent activity with user info
+            $laporanData = $this->laporanModel
+                ->select('laporan.tanggal, barang.nama_barang, laporan.jenis, laporan.jumlah, users.nama as nama_user')
+                ->join('barang', 'barang.id_barang = laporan.id_barang')
+                ->join('users', 'users.id_user = laporan.id_user', 'left')
+                ->orderBy('laporan.tanggal', 'DESC')
+                ->limit(5)
+                ->findAll();
+            
+            // Get low stock items (all items with low stock)
+            $lowStockItems = $this->barangModel
+                ->where('jumlah <= minimum_stok')
+                ->orderBy('jumlah', 'ASC')
+                ->findAll();
+
+            // Get unread notification count
+            $notifCount = count($this->notifikasiModel->getUnreadNotif(100));
+
+            return $this->response->setJSON([
+                'success' => true,
+                'stats' => [
+                    'totalMasuk' => $totalMasuk,
+                    'totalDipakai' => $totalDipakai,
+                    'totalBarang' => $totalBarang,
+                    'barangMinimum' => $barangMinimum
+                ],
+                'activities' => $laporanData,
+                'lowStockItems' => $lowStockItems,
+                'notifCount' => $notifCount
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function kelolaBarang()
@@ -520,9 +584,19 @@ class UserController extends BaseController
             return redirect()->back()->with('error', 'Gagal menyimpan barang.');
         }
 
-        // Siapkan data riwayat (laporan)
-        $nowTime = date('H:i:s');
-        $tanggalFull = $data['tanggal_masuk'] . ' ' . $nowTime;
+        // Siapkan data riwayat (laporan) dengan timezone Jakarta
+        $now = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
+        
+        // Jika tanggal_masuk adalah hari ini, gunakan waktu sekarang
+        // Jika bukan, gunakan tanggal_masuk + waktu sekarang
+        if ($data['tanggal_masuk'] == $now->format('Y-m-d')) {
+            // Gunakan waktu lengkap saat ini
+            $tanggalFull = $now->format('Y-m-d H:i:s');
+        } else {
+            // Gunakan tanggal dari input + waktu sekarang
+            $nowTime = $now->format('H:i:s');
+            $tanggalFull = $data['tanggal_masuk'] . ' ' . $nowTime;
+        }
 
         $riwayat = [
             'id_barang'  => $insertId,
@@ -603,9 +677,19 @@ class UserController extends BaseController
 
         $this->barangModel->update($idBarang, $updateData);
 
-        // Catat di riwayat (laporan)
-        $nowTime = date('H:i:s');
-        $tanggalFull = $tanggalMasuk . ' ' . $nowTime;
+        // Catat di riwayat (laporan) dengan timezone Jakarta
+        $now = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
+        
+        // Jika tanggal_masuk adalah hari ini, gunakan waktu sekarang
+        // Jika bukan, gunakan tanggal_masuk + waktu sekarang
+        if ($tanggalMasuk == $now->format('Y-m-d')) {
+            // Gunakan waktu lengkap saat ini
+            $tanggalFull = $now->format('Y-m-d H:i:s');
+        } else {
+            // Gunakan tanggal dari input + waktu sekarang
+            $nowTime = $now->format('H:i:s');
+            $tanggalFull = $tanggalMasuk . ' ' . $nowTime;
+        }
 
         $riwayat = [
             'id_barang'  => $idBarang,
@@ -653,10 +737,17 @@ class UserController extends BaseController
 
         // Ambil waktu sekarang (Jakarta)
         $now = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
-        $jam = $now->format('H:i:s');
-
-        // Gabungkan jadi datetime
-        $tanggalKeluar = $tanggal . ' ' . $jam;
+        
+        // Jika tanggal adalah hari ini, gunakan waktu sekarang
+        // Jika bukan, gunakan tanggal + waktu sekarang
+        if ($tanggal == $now->format('Y-m-d')) {
+            // Gunakan waktu lengkap saat ini
+            $tanggalKeluar = $now->format('Y-m-d H:i:s');
+        } else {
+            // Gunakan tanggal dari input + waktu sekarang
+            $jam = $now->format('H:i:s');
+            $tanggalKeluar = $tanggal . ' ' . $jam;
+        }
 
         // Ambil stok barang dulu
         $barang = $this->barangModel->find($idBarang);
@@ -755,10 +846,11 @@ class UserController extends BaseController
         // Ambil data laporan yang ada di database
         $existingData = $this->laporanModel->find($idLaporan);
 
-        // Data baru yang akan diupdate
+        // Data baru yang akan diupdate dengan timezone Jakarta
+        $now = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));
         $newData = [
             'tanggal'   => $this->request->getPost('tanggal')
-                ?? date('Y-m-d H:i:s', strtotime('+7 hours')),
+                ?? $now->format('Y-m-d H:i:s'),
             'jumlah'    => $this->request->getPost('jumlah'),
             'jenis'     => $this->request->getPost('jenis'),
             'id_barang' => $barang['id_barang'],
@@ -784,7 +876,8 @@ class UserController extends BaseController
 
     public function printRiwayat($id_laporan)
     {
-        $format = $this->request->getPost('format');
+        // Support GET (?format=pdf|excel) and POST
+        $format = $this->request->getPost('format') ?: $this->request->getGet('format');
 
         if (!$format) {
             return redirect()->back()->with('error', 'Pilih format print terlebih dahulu.');
@@ -794,9 +887,9 @@ class UserController extends BaseController
         $riwayatQuery = $this->laporanModel
             ->select('laporan.tanggal, laporan.jumlah, laporan.jenis, users.nama, barang.nama_barang, laporan.id_laporan')
             ->join('users', 'users.id_user = laporan.id_user')
-            ->join('barang', 'barang.id_barang = laporan.id_barang');
-
-        $riwayatQuery = $this->laporanModel->find($id_laporan);
+            ->join('barang', 'barang.id_barang = laporan.id_barang')
+            ->where('laporan.id_laporan', $id_laporan)
+            ->first();
 
         if (!$riwayatQuery) {
             return redirect()->back()->with('error', 'Data laporan tidak ditemukan.');
@@ -804,18 +897,6 @@ class UserController extends BaseController
 
         // Print Excel
         if ($format === 'excel') {
-            // Ambil ulang data dengan join lengkap agar kolom tersedia
-            $row = $this->laporanModel
-                ->select('laporan.id_laporan, laporan.tanggal, laporan.jumlah, laporan.jenis, users.nama, barang.nama_barang')
-                ->join('users', 'users.id_user = laporan.id_user')
-                ->join('barang', 'barang.id_barang = laporan.id_barang')
-                ->where('laporan.id_laporan', $id_laporan)
-                ->first();
-
-            if (!$row) {
-                return redirect()->back()->with('error', 'Data laporan tidak ditemukan.');
-            }
-
             // Build spreadsheet
             $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
@@ -829,15 +910,20 @@ class UserController extends BaseController
             $sheet->setCellValue('F1', 'Staff');
 
             // Data
-            $sheet->setCellValue('A2', $row['id_laporan']);
-            $sheet->setCellValue('B2', date('d-m-Y H:i:s', strtotime($row['tanggal'] . ' +7 hours')));
-            $sheet->setCellValue('C2', $row['nama_barang']);
-            $sheet->setCellValue('D2', $row['jumlah']);
-            $sheet->setCellValue('E2', $row['jenis']);
-            $sheet->setCellValue('F2', $row['nama']);
+            $sheet->setCellValue('A2', $riwayatQuery['id_laporan']);
+            $sheet->setCellValue('B2', date('d-m-Y H:i:s', strtotime($riwayatQuery['tanggal'] . ' +7 hours')));
+            $sheet->setCellValue('C2', $riwayatQuery['nama_barang']);
+            $sheet->setCellValue('D2', $riwayatQuery['jumlah']);
+            $sheet->setCellValue('E2', $riwayatQuery['jenis']);
+            $sheet->setCellValue('F2', $riwayatQuery['nama']);
+
+            // Auto-size columns
+            foreach (range('A', 'F') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
 
             // Tulis ke file sementara dan kirim via Response CI
-            $fileName = 'laporan_' . $row['id_laporan'] . '.xlsx';
+            $fileName = 'laporan_' . $riwayatQuery['id_laporan'] . '.xlsx';
             $tempPath = WRITEPATH . 'uploads/' . $fileName;
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
             $writer->save($tempPath);
@@ -851,7 +937,9 @@ class UserController extends BaseController
         // Print PDF
         if ($format === 'pdf') {
             // Load Dompdf
-            $dompdf = new \Dompdf\Dompdf();
+            $options = new Options();
+            $options->set('isHtml5ParserEnabled', true);
+            $dompdf = new \Dompdf\Dompdf($options);
             $html = view('user/pdf_template', ['laporan' => $riwayatQuery]);
 
             $dompdf->loadHtml($html);

@@ -48,6 +48,7 @@ $routes->group('admin', ['filter' => 'auth:Admin'], function ($routes) {
 
 $routes->group('user', ['filter' => 'auth:User'], function ($routes) {
     $routes->get('dashboard', 'UserController::index');
+    $routes->get('dashboard/getData', 'UserController::getData');
     $routes->get('kelola_barang', 'UserController::kelolaBarang');
     $routes->get('tambah_barang', 'UserController::tambahBarang');
     $routes->post('update_barang/(:num)', 'UserController::updateBarang/$1');
@@ -65,7 +66,7 @@ $routes->group('user', ['filter' => 'auth:User'], function ($routes) {
     $routes->post('logout', 'UserController::logout');
     $routes->post('hapus-riwayat/(:num)', 'UserController::hapusRiwayat/$1');
     $routes->post('edit-riwayat/(:num)', 'UserController::editRiwayat/$1');
-    $routes->post('print-riwayat/(:num)', 'UserController::printRiwayat/$1');
+    $routes->match(['get', 'post'], 'print-riwayat/(:num)', 'UserController::printRiwayat/$1');
     // Cetak riwayat (sesuai filter) - PDF/Excel
     $routes->get('riwayat/pdf', 'UserController::cetakRiwayatPDF');
     $routes->get('riwayat/excel', 'UserController::cetakRiwayatExcel');

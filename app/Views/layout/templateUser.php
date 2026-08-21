@@ -14,9 +14,9 @@
 
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            padding-top: 80px;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
         }
 
         .navbar-custom {
@@ -27,7 +27,7 @@
             top: 0;
             left: 0;
             z-index: 1000;
-            display: flex;
+            display: none; /* Hide navbar completely */
             align-items: center;
             justify-content: space-between;
             padding: 0 32px;
@@ -43,24 +43,93 @@
         /* ini buat yang aktif */
         .navbar-link.active {
             color: #60a5fa;
-            /* biru muda */
             padding-bottom: 4px;
             font-weight: 600;
-            /* lebih tebal */
         }
+
+        .hide-navbar-links .navbar-custom nav {
+            display: none;
+        }
+
+        .navbar-custom-dashboard {
+            justify-content: space-between;
+        }
+
+        /* Sidebar Layout sudah di-handle di admin.css */
+        
     </style>
-    <link rel="stylesheet" href="<?= base_url('assets/css/user.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/admin.css') ?>?v=<?= time() ?>">
 
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen <?= (strtolower($currentPage) === 'dashboard') ? 'hide-navbar-links' : '' ?>">
 
-    <!-- Navbar Biru Besar -->
-    <header class="navbar-custom">
+    <!-- Notification Bell (Top Right) - Only show on dashboard -->
+    <?php if (strtolower($currentPage ?? '') === 'dashboard'): ?>
+    <?php endif; ?>
+
+    <!-- Sidebar Admin Style -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="<?= base_url('assets/img/logo.png') ?>" alt="RAILOG Logo" style="width: 40px; height: 40px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div style="width: 36px; height: 36px; background: #3498db; border-radius: 8px; display: none; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">R</div>
+                <div>
+                    <h3>RAILOG</h3>
+                    <p>Staff Gudang</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-menu">
+            <a href="<?= base_url('/user/dashboard') ?>" class="nav-link <?= (strtolower($currentPage ?? '') === 'dashboard') ? 'active' : '' ?>">
+                <i class="fas fa-home"></i>
+                <span>Beranda</span>
+            </a>
+            <a href="<?= base_url('/user/kelola_barang') ?>" class="nav-link <?= (strtolower($currentPage ?? '') === 'kelolabarang') ? 'active' : '' ?>">
+                <i class="fas fa-box"></i>
+                <span>Kelola Barang</span>
+            </a>
+            <a href="<?= base_url('/user/riwayat') ?>" class="nav-link <?= (strtolower($currentPage ?? '') === 'riwayat') ? 'active' : '' ?>">
+                <i class="fas fa-chart-bar"></i>
+                <span>Laporan Barang</span>
+            </a>
+        </div>
+
+        <!-- Spacer untuk push profile ke bawah -->
+        <div class="sidebar-spacer"></div>
+
+        <!-- User Profile di Footer Sidebar -->
+        <div class="user-profile-footer">
+            <a href="<?= base_url('/user/profil') ?>" class="user-profile">
+                <div class="user-avatar">
+                    <?php
+                    $nama = trim($user['nama'] ?? '');
+                    $parts = explode(' ', $nama);
+                    if (count($parts) >= 2) {
+                        $initials = strtoupper(substr($parts[0], 0, 1) . substr($parts[1], 0, 1));
+                    } else {
+                        $initials = strtoupper(substr($nama, 0, 1));
+                    }
+                    echo $initials;
+                    ?>
+                </div>
+                <div class="user-info">
+                    <h6><?= esc($user['nama'] ?? 'User') ?></h6>
+                    <p>Staff Gudang</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Hidden Navbar (kept for non-dashboard pages compatibility) -->
+    <header class="navbar-custom <?= (strtolower($currentPage) === 'dashboard') ? 'navbar-custom-dashboard' : '' ?>" style="display: none;">
         <div class="flex items-center gap-3">
             <img src="../assets/img/logo.png" alt="Logo RAILOG" class="w-10 h-10">
             <span class="text-2xl font-semibold text-white">RAILOG</span>
         </div>
+        
+        <?php if (strtolower($currentPage) !== 'dashboard'): ?>
         <nav class="space-x-8">
             <a href="<?= base_url('/user/dashboard') ?>" class="navbar-link text-white hover:text-blue-300 <?= (strtolower($currentPage) === 'dashboard') ? 'active' : '' ?>">Beranda</a>
             <a href="<?= base_url('/user/kelola_barang') ?>" class="navbar-link text-white hover:text-blue-300 <?= (strtolower($currentPage) === 'kelolabarang') ? 'active' : '' ?>">Kelola Barang</a>
@@ -80,6 +149,8 @@
             </div>
             <a href="<?= base_url('/user/profil') ?>" class="navbar-link text-white hover:text-blue-300 <?= (strtolower($currentPage) === 'profil') ? 'active' : '' ?> ">Profil</a>
         </nav>
+        <?php endif; ?>
+        
         <!-- Bagian kanan (Notifikasi + Profil) -->
         <div class="flex items-center gap-4">
             <!-- Notifikasi -->
@@ -118,8 +189,8 @@
                 </div>
             </div>
 
-            <!-- Profil -->
-            <a href="<?= base_url('user/profil') ?>">
+            <!-- Profil - Hidden -->
+            <a href="<?= base_url('user/profil') ?>" style="display: none;">
                 <div class="flex items-center gap-4">
                     <div class="text-right text-base">
                         <div class="font-semibold text-white"><?= esc($user['nama']) ?></div>
@@ -145,8 +216,10 @@
         </div>
     </header>
 
+
+
     <!-- Konten Dinamis -->
-    <main class="p-6">
+    <main>
         <?= $this->renderSection('content') ?>
     </main>
 
@@ -160,13 +233,14 @@
     const notifBtn = document.getElementById("notifButton");
     const notifDropdown = document.getElementById("notifDropdown");
 
-    notifBtn.addEventListener("click", () => {
+    notifBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         notifDropdown.classList.toggle("hidden");
     });
 
     // klik di luar dropdown -> close
     document.addEventListener("click", (e) => {
-        if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
+        if (notifBtn && !notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
             notifDropdown.classList.add("hidden");
         }
     });
