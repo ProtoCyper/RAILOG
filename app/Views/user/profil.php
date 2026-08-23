@@ -220,7 +220,7 @@
                     </div>
                 <?php endif; ?>
                 <?php if (session()->getFlashdata('success')): ?>
-                    <div class="profile-alert profile-alert-success">
+                    <div id="successAlert" class="profile-alert profile-alert-success">
                         <?= session()->getFlashdata('success'); ?>
                     </div>
                 <?php endif; ?>
@@ -263,7 +263,7 @@
                     </div>
                 <?php endif; ?>
                 <?php if (session()->getFlashdata('successp')): ?>
-                    <div class="profile-alert profile-alert-success">
+                    <div id="successpAlert" class="profile-alert profile-alert-success">
                         <?= session()->getFlashdata('successp'); ?>
                     </div>
                 <?php endif; ?>
@@ -323,6 +323,18 @@
 </div>
 
 <script>
+    // Auto-hide success alert after 3 seconds
+    ['successAlert', 'successpAlert'].forEach(function(id) {
+        let el = document.getElementById(id);
+        if (el) {
+            setTimeout(function() {
+                el.style.transition = 'opacity 0.5s ease';
+                el.style.opacity = '0';
+                setTimeout(function() { el.style.display = 'none'; }, 500);
+            }, 3000);
+        }
+    });
+
     // Toggle password visibility
     function togglePassword(inputId, button) {
         const input = document.getElementById(inputId);
