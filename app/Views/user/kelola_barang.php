@@ -180,6 +180,22 @@
         border-radius: 12px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .content-card-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .content-card-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
     }
 
     .data-table-wrapper {
@@ -200,10 +216,11 @@
         padding: 1rem 1.5rem;
         text-align: left;
         font-size: 0.75rem;
-        font-weight: 600;
+        font-weight: 700;
         color: #6b7280;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        white-space: nowrap;
     }
 
     .data-table th.text-center {
@@ -215,6 +232,7 @@
         border-bottom: 1px solid #f3f4f6;
         color: #374151;
         font-size: 0.875rem;
+        vertical-align: middle;
     }
 
     .data-table tbody tr:hover {
@@ -315,7 +333,6 @@
     </div>
 
     <div class="page-content">
-    <div class="page-content">
         <!-- Flash Messages -->
         <?php if (session()->getFlashdata('error')): ?>
             <div class="alert-info" style="background: #fee2e2; border-color: #fecaca;">
@@ -358,7 +375,10 @@
 
         <!-- Table Card -->
         <div class="content-card">
-            <div class="alert-info">
+            <div class="content-card-header">
+                <h3 class="content-card-title">Daftar Barang</h3>
+            </div>
+            <div class="alert-info" style="margin: 1rem 1.5rem 0 1.5rem;">
                 <div class="alert-dot"></div>
                 <span class="alert-text">Menandakan stok berada pada atau di bawah minimum</span>
             </div>
