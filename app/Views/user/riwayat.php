@@ -312,28 +312,39 @@
 
     .pagination-links {
         display: flex;
-        gap: 0.25rem;
+        gap: 0.5rem;
+        align-items: center;
     }
 
     .pagination-links a,
     .pagination-links span {
-        padding: 0.5rem 0.75rem;
-        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 0.75rem;
+        border-radius: 8px;
         font-size: 0.875rem;
+        font-weight: 600;
         text-decoration: none;
         color: #374151;
         background: white;
         border: 1px solid #e5e7eb;
+        transition: all 0.2s;
     }
 
     .pagination-links a:hover {
         background: #f9fafb;
+        border-color: #d1d5db;
     }
 
-    .pagination-links .active {
+    .pagination-links .active,
+    .pagination-links a.active {
         background: #3b82f6;
         color: white;
         border-color: #3b82f6;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
 
     /* Empty State */
