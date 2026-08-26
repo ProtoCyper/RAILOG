@@ -9,7 +9,7 @@
         <div class="header-content">
             <div class="header-title">
                 <h1>Pengaturan Akun</h1>
-                <p>Kelola informasi akun Administrator Anda di sini.</p>
+                <p>Kelola informasi akun Super Administrator Anda</p>
             </div>
             <div class="header-actions">
                 <div class="user-profile">

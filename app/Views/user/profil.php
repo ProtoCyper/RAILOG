@@ -204,7 +204,7 @@
 <div class="profile-page-wrapper">
     <!-- Page Header -->
     <div class="profile-page-header">
-        <h1 class="profile-page-title"><?= esc($user['nama']) ?></h1>
+        <h1 class="profile-page-title">Pengaturan Akun</h1>
         <p class="profile-page-subtitle">Kelola informasi akun dan keamanan Anda</p>
     </div>
 
