@@ -424,13 +424,16 @@ class UserController extends BaseController
 
     public function pdf($barcode)
     {
+        // AUTO-SYNC: pastikan stok barang selalu akurat dari mutasi laporan
+        $this->syncStokBarangSilent();
+
         $barang = $this->barangModel->where('barcode', $barcode)->first();
         if (!$barang) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Barang tidak ditemukan');
         }
 
-        // Buat HTML untuk PDF
-        $html = view('barang/pdf_template', ['barang' => $barang]);
+        // Buat HTML untuk PDF detail barang
+        $html = view('user/barang_detail_pdf', ['barang' => $barang]);
 
         // Setup Dompdf
         $options = new Options();
@@ -443,7 +446,12 @@ class UserController extends BaseController
         $dompdf->render();
 
         $fileName = 'Detail_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $barang['nama_barang']) . '.pdf';
-        $dompdf->stream($fileName, ["Attachment" => true]);
+        $pdfOutput = $dompdf->output();
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+            ->setBody($pdfOutput);
     }
 
     public function riwayat()
@@ -1084,6 +1092,9 @@ class UserController extends BaseController
 
     public function printRiwayat($id_laporan)
     {
+        // AUTO-SYNC: Sinkronkan stok barang dari laporan agar konsisten
+        $this->syncStokBarangSilent();
+
         // Support GET (?format=pdf|excel) and POST
         $format = $this->request->getPost('format') ?: $this->request->getGet('format');
 
@@ -1091,11 +1102,11 @@ class UserController extends BaseController
             return redirect()->back()->with('error', 'Pilih format print terlebih dahulu.');
         }
 
-        // Ambil data laporan berdasarkan ID
+        // Ambil data laporan berdasarkan ID beserta detail barang terkini
         $riwayatQuery = $this->laporanModel
-            ->select('laporan.tanggal, laporan.jumlah, laporan.jenis, users.nama, barang.nama_barang, laporan.id_laporan')
-            ->join('users', 'users.id_user = laporan.id_user')
-            ->join('barang', 'barang.id_barang = laporan.id_barang')
+            ->select('laporan.tanggal, laporan.jumlah, laporan.jenis, users.nama, barang.nama_barang, barang.jumlah as total_stok_sekarang, barang.satuan, laporan.id_laporan')
+            ->join('users', 'users.id_user = laporan.id_user', 'left')
+            ->join('barang', 'barang.id_barang = laporan.id_barang', 'left')
             ->where('laporan.id_laporan', $id_laporan)
             ->first();
 
@@ -1111,22 +1122,29 @@ class UserController extends BaseController
 
             // Header
             $sheet->setCellValue('A1', 'ID Laporan');
-            $sheet->setCellValue('B1', 'Tanggal');
+            $sheet->setCellValue('B1', 'Tanggal Transaksi');
             $sheet->setCellValue('C1', 'Nama Barang');
-            $sheet->setCellValue('D1', 'Jumlah');
-            $sheet->setCellValue('E1', 'Jenis');
-            $sheet->setCellValue('F1', 'Staff');
+            $sheet->setCellValue('D1', 'Jumlah Mutasi');
+            $sheet->setCellValue('E1', 'Satuan');
+            $sheet->setCellValue('F1', 'Jenis');
+            $sheet->setCellValue('G1', 'Staff Penanggung Jawab');
+            $sheet->setCellValue('H1', 'Total Stok Saat Ini');
+
+            // Header style
+            $sheet->getStyle('A1:H1')->getFont()->setBold(true);
 
             // Data
             $sheet->setCellValue('A2', $riwayatQuery['id_laporan']);
-            $sheet->setCellValue('B2', date('d-m-Y H:i:s', strtotime($riwayatQuery['tanggal'] . ' +7 hours')));
+            $sheet->setCellValue('B2', date('d-m-Y H:i:s', strtotime($riwayatQuery['tanggal'])));
             $sheet->setCellValue('C2', $riwayatQuery['nama_barang']);
             $sheet->setCellValue('D2', $riwayatQuery['jumlah']);
-            $sheet->setCellValue('E2', $riwayatQuery['jenis']);
-            $sheet->setCellValue('F2', $riwayatQuery['nama']);
+            $sheet->setCellValue('E2', $riwayatQuery['satuan'] ?? '-');
+            $sheet->setCellValue('F2', ucfirst($riwayatQuery['jenis']));
+            $sheet->setCellValue('G2', $riwayatQuery['nama'] ?? '-');
+            $sheet->setCellValue('H2', $riwayatQuery['total_stok_sekarang'] ?? 0);
 
             // Auto-size columns
-            foreach (range('A', 'F') as $col) {
+            foreach (range('A', 'H') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
@@ -1147,14 +1165,21 @@ class UserController extends BaseController
             // Load Dompdf
             $options = new Options();
             $options->set('isHtml5ParserEnabled', true);
+            $options->set('isRemoteEnabled', true);
             $dompdf = new \Dompdf\Dompdf($options);
             $html = view('user/pdf_template', ['laporan' => $riwayatQuery]);
 
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
-            $dompdf->stream('laporan_' . $riwayatQuery['id_laporan'] . '.pdf', ["Attachment" => true]);
-            exit;
+
+            $fileName = 'laporan_' . $riwayatQuery['id_laporan'] . '.pdf';
+            $pdfOutput = $dompdf->output();
+
+            return $this->response
+                ->setHeader('Content-Type', 'application/pdf')
+                ->setHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+                ->setBody($pdfOutput);
         }
 
         return redirect()->back()->with('error', 'Format tidak valid.');
@@ -1162,6 +1187,9 @@ class UserController extends BaseController
 
     public function cetakRiwayatPDF()
     {
+        // AUTO-SYNC: pastikan stok barang selalu sinkron dengan laporan
+        $this->syncStokBarangSilent();
+
         $keyword = $this->request->getGet('keyword');
         $type    = strtolower($this->request->getGet('type') ?? 'semua');
         $day     = $this->request->getGet('day');     // YYYY-MM-DD
@@ -1170,7 +1198,7 @@ class UserController extends BaseController
 
         $db = \Config\Database::connect();
         $builder = $db->table('laporan l')
-            ->select('l.*, b.nama_barang as nama_barang, u.nama as nama_user')
+            ->select('l.*, b.nama_barang as nama_barang, b.satuan, b.jumlah as stok_sekarang, u.nama as nama_user')
             ->join('barang b', 'b.id_barang = l.id_barang', 'left')
             ->join('users u', 'u.id_user = l.id_user', 'left');
 
@@ -1222,7 +1250,7 @@ class UserController extends BaseController
         $judulPeriode = '';
         if ($type === 'harian' && !empty($day)) {
             $judulPeriode = 'Harian: ' . namaHariIndo($day) . ', ' . formatTanggalIndoTanpaJam($day);
-        } elseif ($type === 'mingguan' && !empty($week) && strpos($week, '-W') !== false) {
+        } elseif ($type === 'mingguan' && !empty($week && strpos($week, '-W') !== false)) {
             try {
                 [$y, $w] = explode('-W', $week);
                 $start = new \DateTime();
@@ -1258,13 +1286,17 @@ class UserController extends BaseController
             $kesimpulan = 'Stok seimbang';
         }
 
+        // Ambil total stok gudang saat ini
+        $totalStokGudang = (int)($this->barangModel->selectSum('jumlah')->get()->getRow()->jumlah ?? 0);
+
         $html = view('user/riwayat_pdf', [
-            'riwayatData'  => $riwayatData,
-            'keyword'      => $keyword,
-            'totalMasuk'   => $totalMasuk,
-            'totaldipakai' => $totaldipakai,
-            'kesimpulan'   => $kesimpulan,
-            'judulPeriode' => $judulPeriode,
+            'riwayatData'     => $riwayatData,
+            'keyword'         => $keyword,
+            'totalMasuk'      => $totalMasuk,
+            'totaldipakai'    => $totaldipakai,
+            'totalStokGudang' => $totalStokGudang,
+            'kesimpulan'      => $kesimpulan,
+            'judulPeriode'    => $judulPeriode,
         ]);
 
         $options = new Options();
@@ -1285,6 +1317,9 @@ class UserController extends BaseController
 
     public function cetakRiwayatExcel()
     {
+        // AUTO-SYNC: pastikan stok barang selalu sinkron dengan laporan
+        $this->syncStokBarangSilent();
+
         $keyword = $this->request->getGet('keyword');
         $type    = strtolower($this->request->getGet('type') ?? 'semua');
         $day     = $this->request->getGet('day');
@@ -1293,7 +1328,7 @@ class UserController extends BaseController
 
         $db = \Config\Database::connect();
         $builder = $db->table('laporan l')
-            ->select('l.tanggal, l.jumlah, l.jenis, b.nama_barang, u.nama as nama_user')
+            ->select('l.tanggal, l.jumlah, l.jenis, b.nama_barang, b.satuan, b.jumlah as stok_sekarang, u.nama as nama_user')
             ->join('barang b', 'b.id_barang = l.id_barang', 'left')
             ->join('users u', 'u.id_user = l.id_user', 'left');
 
@@ -1367,13 +1402,13 @@ class UserController extends BaseController
         $sheet = $spreadsheet->getActiveSheet();
 
         $sheet->setCellValue('A1', 'LAPORAN RIWAYAT BARANG');
-        $sheet->mergeCells('A1:F1');
+        $sheet->mergeCells('A1:G1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
 
         if (!empty($judulPeriode)) {
             $sheet->setCellValue('A2', 'Periode: ' . $judulPeriode);
-            $sheet->mergeCells('A2:F2');
+            $sheet->mergeCells('A2:G2');
             $sheet->getStyle('A2')->getAlignment()->setHorizontal('center');
             $sheet->getStyle('A2')->getFont()->setItalic(true);
         }
@@ -1382,10 +1417,14 @@ class UserController extends BaseController
         $sheet->setCellValue('B3', 'Waktu');
         $sheet->setCellValue('C3', 'Nama Barang');
         $sheet->setCellValue('D3', 'Jumlah');
-        $sheet->setCellValue('E3', 'Jenis');
-        $sheet->setCellValue('F3', 'Staff');
+        $sheet->setCellValue('E3', 'Satuan');
+        $sheet->setCellValue('F3', 'Jenis');
+        $sheet->setCellValue('G3', 'Staff');
 
-        foreach (range('A', 'F') as $col) {
+        $sheet->getStyle('A3:G3')->getFont()->setBold(true);
+        $sheet->getStyle('A3:G3')->getAlignment()->setHorizontal('center');
+
+        foreach (range('A', 'G') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -1397,9 +1436,10 @@ class UserController extends BaseController
             $sheet->setCellValue('A' . $row, $no++);
             $sheet->setCellValue('B' . $row, date('d-m-Y H:i:s', strtotime($data['tanggal'])));
             $sheet->setCellValue('C' . $row, $data['nama_barang']);
-            $sheet->setCellValue('D' . $row, $data['jumlah']);
-            $sheet->setCellValue('E' . $row, $data['jenis']);
-            $sheet->setCellValue('F' . $row, $data['nama_user']);
+            $sheet->setCellValue('D' . $row, (int)$data['jumlah']);
+            $sheet->setCellValue('E' . $row, $data['satuan'] ?? '-');
+            $sheet->setCellValue('F' . $row, ucfirst($data['jenis']));
+            $sheet->setCellValue('G' . $row, $data['nama_user'] ?? '-');
 
             if (strtolower($data['jenis']) === 'masuk') {
                 $totalMasuk += (int)$data['jumlah'];
@@ -1409,14 +1449,27 @@ class UserController extends BaseController
             $row++;
         }
 
+        // Ambil total stok gudang
+        $totalStokGudang = (int)($this->barangModel->selectSum('jumlah')->get()->getRow()->jumlah ?? 0);
+
         $row += 2;
-        $sheet->setCellValue('E' . $row, 'Total Barang Masuk:');
+        $sheet->setCellValue('E' . $row, 'Total Mutasi Masuk:');
         $sheet->setCellValue('F' . $row, $totalMasuk);
+        $sheet->getStyle('E' . $row)->getFont()->setBold(true);
+
         $row++;
-        $sheet->setCellValue('E' . $row, 'Total Barang dipakai:');
+        $sheet->setCellValue('E' . $row, 'Total Mutasi Dipakai:');
         $sheet->setCellValue('F' . $row, $totaldipakai);
+        $sheet->getStyle('E' . $row)->getFont()->setBold(true);
+
+        $row++;
+        $sheet->setCellValue('E' . $row, 'Total Seluruh Stok Gudang:');
+        $sheet->setCellValue('F' . $row, $totalStokGudang);
+        $sheet->getStyle('E' . $row . ':F' . $row)->getFont()->setBold(true);
+
         $row += 2;
-        $sheet->setCellValue('E' . $row, 'Kesimpulan:');
+        $sheet->setCellValue('E' . $row, 'Kesimpulan Periode:');
+        $sheet->getStyle('E' . $row)->getFont()->setBold(true);
         if ($totalMasuk > $totaldipakai) {
             $sheet->setCellValue('F' . $row, 'Stok bertambah (' . ($totalMasuk - $totaldipakai) . ')');
         } elseif ($totalMasuk < $totaldipakai) {

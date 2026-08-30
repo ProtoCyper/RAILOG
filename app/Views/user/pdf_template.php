@@ -54,20 +54,23 @@
 
     <div class="info">
         <p><strong>ID Laporan:</strong> <?= esc($laporan['id_laporan']) ?></p>
-        <p><strong>Tanggal:</strong> <?= date('d-m-Y H:i:s', strtotime($laporan['tanggal'] . ' +7 hours')) ?></p>
-        <p><strong>Staff:</strong> <?= esc($laporan['nama']) ?></p>
+        <p><strong>Tanggal Transaksi:</strong> <?= date('d-m-Y H:i:s', strtotime($laporan['tanggal'])) ?></p>
+        <p><strong>Staff Penanggung Jawab:</strong> <?= esc($laporan['nama']) ?></p>
+        <p><strong>Total Stok Barang Saat Ini:</strong> <?= esc($laporan['total_stok_sekarang'] ?? '-') ?> <?= esc($laporan['satuan'] ?? '') ?></p>
     </div>
 
     <table>
         <tr>
             <th>Nama Barang</th>
-            <th>Jumlah</th>
-            <th>Jenis</th>
+            <th>Jumlah Mutasi</th>
+            <th>Jenis Transaksi</th>
+            <th>Stok Tersisa</th>
         </tr>
         <tr>
             <td><?= esc($laporan['nama_barang']) ?></td>
-            <td><?= esc($laporan['jumlah']) ?></td>
-            <td><?= esc($laporan['jenis']) ?></td>
+            <td><?= esc($laporan['jumlah']) ?> <?= esc($laporan['satuan'] ?? '') ?></td>
+            <td><strong><?= ucfirst(esc($laporan['jenis'])) ?></strong></td>
+            <td><?= esc($laporan['total_stok_sekarang'] ?? '-') ?> <?= esc($laporan['satuan'] ?? '') ?></td>
         </tr>
     </table>
 
