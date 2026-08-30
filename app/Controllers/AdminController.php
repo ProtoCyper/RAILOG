@@ -217,6 +217,7 @@ class AdminController extends BaseController
         $nama         = $this->request->getPost('nama_barang');
         $jumlah       = $this->request->getPost('jumlah');
         $satuan       = $this->request->getPost('satuan');
+        $tanggalMasuk = $this->request->getPost('tanggal_masuk');
         $minimumStok  = $this->request->getPost('minimum_stok');
         $barcodeInput = $this->request->getPost('barcode');
 
@@ -227,6 +228,10 @@ class AdminController extends BaseController
             'satuan'       => $satuan,
             'minimum_stok' => $minimumStok,
         ];
+
+        if (!empty($tanggalMasuk)) {
+            $dataUpdate['tanggal_masuk'] = $tanggalMasuk;
+        }
 
         // Hanya set barcode jika ada nilai baru
         if ($barcodeInput !== null && trim($barcodeInput) !== '') {
