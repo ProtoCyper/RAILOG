@@ -512,7 +512,7 @@ class AdminController extends BaseController
             'title'         => 'Log Aktivitas Staff',
             'currentPage'   => 'log-aktivitas-staff',
             'judul'         => 'Log Aktivitas Staff',
-            'subJudul'      => 'Riwayat aktivitas semua Staff pada sistem.',
+            'subJudul'      => 'Riwayat aktivitas semua Staff pada sistem',
             'keyword'       => $keyword,
             'perPage'       => $perPage,
             'pager'         => $this->logAktivitasModel->pager,

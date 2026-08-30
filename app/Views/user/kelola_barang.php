@@ -309,6 +309,72 @@
         color: #9ca3af;
     }
 
+    /* Pagination */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-top: 1.5rem;
+    }
+
+    .pagination-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .pagination-select {
+        border: 1px solid #d1d5db;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        background: white;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+    .pagination-links {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .pagination-links a,
+    .pagination-links span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 0.75rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #374151;
+        background: white;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+    }
+
+    .pagination-links a:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+    }
+
+    .pagination-links .active,
+    .pagination-links a.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
     @media (max-width: 1024px) {
         .page-wrapper {
             margin-left: 0;
@@ -450,19 +516,19 @@
         </div>
 
         <!-- Pagination -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <span style="font-size: 0.875rem; color: #6b7280;">Baris per halaman</span>
+        <div class="pagination-wrapper">
+            <div class="pagination-info">
+                <span>Baris per halaman</span>
                 <form method="get">
                     <input type="hidden" name="keyword" value="<?= esc($keyword) ?>" />
-                    <select name="per_page" onchange="this.form.submit()" style="border: 1px solid #d1d5db; padding: 0.5rem 0.75rem; border-radius: 8px; background: white; font-size: 0.875rem;">
+                    <select name="per_page" onchange="this.form.submit()" class="pagination-select">
                         <option value="5" <?= ($perPage == 5) ? 'selected' : '' ?>>5</option>
                         <option value="10" <?= ($perPage == 10) ? 'selected' : '' ?>>10</option>
                         <option value="25" <?= ($perPage == 25) ? 'selected' : '' ?>>25</option>
                     </select>
                 </form>
             </div>
-            <div>
+            <div class="pagination-links">
                 <?php if ($pager): ?>
                     <?= $pager->simpleLinks('number', 'tailwind_pagination') ?>
                 <?php endif; ?>
