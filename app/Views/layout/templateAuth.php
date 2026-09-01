@@ -13,6 +13,8 @@
 
 <body>
     <div class="background-slider">
+        <div class="bg-layer active" id="bgLayer1"></div>
+        <div class="bg-layer inactive" id="bgLayer2"></div>
         <div class="background-overlay"></div>
         <div class="background-content">
             <div class="terminal-info">

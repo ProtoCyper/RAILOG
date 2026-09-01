@@ -1,17 +1,35 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Background image slider
+  // Background image slider dengan efek crossfade halus (tidak mencolok)
   const backgrounds = ["assets/img/bg1.jpg", "assets/img/bg2.jpg", "assets/img/bg3.jpg"];
   let current = 0;
-  const bgDiv = document.querySelector(".background-slider");
+  const bgLayer1 = document.getElementById("bgLayer1");
+  const bgLayer2 = document.getElementById("bgLayer2");
+  let activeLayer = bgLayer1;
+  let inactiveLayer = bgLayer2;
 
   function changeBackground() {
-    if (bgDiv) {
-      bgDiv.style.backgroundImage = `url('${backgrounds[current]}')`;
+    if (bgLayer1 && bgLayer2) {
+      // Set gambar berikutnya di layer yang tidak aktif
       current = (current + 1) % backgrounds.length;
+      inactiveLayer.style.backgroundImage = `url('${backgrounds[current]}')`;
+      
+      // Crossfade: tukar opacity kedua layer
+      activeLayer.classList.remove("active");
+      activeLayer.classList.add("inactive");
+      inactiveLayer.classList.remove("inactive");
+      inactiveLayer.classList.add("active");
+      
+      // Tukar referensi layer
+      [activeLayer, inactiveLayer] = [inactiveLayer, activeLayer];
     }
   }
-  changeBackground();
-  setInterval(changeBackground, 4000);
+  
+  // Set gambar pertama
+  if (bgLayer1) {
+    bgLayer1.style.backgroundImage = `url('${backgrounds[0]}')`;
+  }
+  
+  setInterval(changeBackground, 5000);
 
   // Password toggle
   const eyeIcon = `
