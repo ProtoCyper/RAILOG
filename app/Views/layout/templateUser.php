@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
     <meta name="csrf-token-name" content="<?= csrf_token() ?>">
     <title> <?= esc($title) ?></title>
+    <link rel="icon" type="image/png" href="<?= base_url('/assets/img/logo.png'); ?>">
     <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
