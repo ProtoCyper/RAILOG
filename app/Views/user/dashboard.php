@@ -175,24 +175,27 @@
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         transition: transform 0.2s;
         position: relative;
-        border-bottom: 3px solid;
+        border-left: 4px solid;
     }
 
     .stat-card:nth-child(1) {
-        border-bottom-color: #10b981;
+        background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+        border-left-color: #86efac;
     }
 
     .stat-card:nth-child(2) {
-        border-bottom-color: #3b82f6;
+        background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+        border-left-color: #93c5fd;
     }
 
     .stat-card:nth-child(3) {
-        border-bottom-color: #6366f1;
+        background: linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%);
+        border-left-color: #c4b5fd;
     }
 
     .stat-card:nth-child(4) {
-        background: #fef3c7;
-        border-bottom-color: #f59e0b;
+        background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+        border-left-color: #fbbf24;
     }
 
     .stat-card:hover {
@@ -219,22 +222,22 @@
 
     .stat-meta {
         font-size: 0.875rem;
-        color: #10b981;
+        color: #16a34a;
         font-weight: 600;
         margin-bottom: 0.75rem;
         display: inline-block;
     }
 
     .stat-card:nth-child(2) .stat-meta {
-        color: #3b82f6;
+        color: #2563eb;
     }
 
     .stat-card:nth-child(3) .stat-meta {
-        color: #6b7280;
+        color: #7c3aed;
     }
 
     .stat-card:nth-child(4) .stat-meta {
-        color: #1f2937;
+        color: #d97706;
     }
 
     .stat-description {
@@ -247,8 +250,8 @@
         position: absolute;
         top: 1rem;
         right: 1rem;
-        background: #fbbf24;
-        color: #78350f;
+        background: #fef3c7;
+        color: #92400e;
         font-size: 0.625rem;
         font-weight: 700;
         padding: 0.25rem 0.5rem;
@@ -258,7 +261,7 @@
 
     .progress-bar {
         height: 6px;
-        background: #e5e7eb;
+        background: #f3f4f6;
         border-radius: 3px;
         overflow: hidden;
     }
@@ -270,19 +273,19 @@
     }
 
     .stat-card:nth-child(1) .progress-fill {
-        background: linear-gradient(90deg, #10b981, #059669);
+        background: linear-gradient(90deg, #86efac, #4ade80);
     }
 
     .stat-card:nth-child(2) .progress-fill {
-        background: linear-gradient(90deg, #3b82f6, #2563eb);
+        background: linear-gradient(90deg, #93c5fd, #60a5fa);
     }
 
     .stat-card:nth-child(3) .progress-fill {
-        background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+        background: linear-gradient(90deg, #c4b5fd, #a78bfa);
     }
 
     .stat-card:nth-child(4) .progress-fill {
-        background: linear-gradient(90deg, #f59e0b, #d97706);
+        background: linear-gradient(90deg, #fcd34d, #fbbf24);
     }
 
     .content-grid {
