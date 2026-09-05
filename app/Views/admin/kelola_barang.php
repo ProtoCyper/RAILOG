@@ -2,193 +2,459 @@
 <?= $this->section('content') ?>
 
 <style>
-    /* Styling Action Buttons & Badges yang sama dengan User */
-    .action-btns {
+    .page-wrapper {
+        margin-left: 280px;
+        background-color: #f0f2f5;
+        min-height: 100vh;
+    }
+
+    /* Modal Positioning Fix - Prevent sidebar overlap */
+    #modalEdit,
+    #modalDetail {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        margin: 0 !important;
+        z-index: 9999 !important;
+    }
+
+    .page-content {
+        padding: 2rem;
+    }
+
+    .search-actions-bar {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .search-form {
+        display: flex;
+        gap: 0.75rem;
+        flex: 1;
+        max-width: 600px;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        flex: 1;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
         align-items: center;
         gap: 0.5rem;
     }
 
-    .icon-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 34px;
-        height: 34px;
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #d1d5db;
+    }
+
+    .alert-info {
+        background: #fef3c7;
+        border: 1px solid #fde68a;
         border-radius: 8px;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-decoration: none;
+        padding: 0.875rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
     }
 
-    .icon-btn-edit {
-        background-color: #3b82f6;
-        color: white;
+    .alert-dot {
+        width: 0.625rem;
+        height: 0.625rem;
+        background: #f59e0b;
+        border-radius: 50%;
+        flex-shrink: 0;
     }
 
-    .icon-btn-edit:hover {
-        background-color: #2563eb;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+    .alert-text {
+        font-size: 0.875rem;
+        color: #92400e;
+        font-weight: 500;
     }
 
-    .icon-btn-view {
-        background-color: #10b981;
-        color: white;
+    .content-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
     }
 
-    .icon-btn-view:hover {
-        background-color: #059669;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+    .data-table-wrapper {
+        overflow-x: auto;
     }
 
-    .icon-btn-delete {
-        background-color: #ef4444;
-        color: white;
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
     }
 
-    .icon-btn-delete:hover {
-        background-color: #dc2626;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
+    .data-table thead {
+        background: #f9fafb;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .data-table th {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+
+    .data-table th.text-center {
+        text-align: center;
+    }
+
+    .data-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f3f4f6;
+        color: #374151;
+        font-size: 0.875rem;
+        vertical-align: middle;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .data-table tbody tr.low-stock {
+        background: #fee2e2;
+    }
+
+    .data-table tbody tr.low-stock:hover {
+        background: #fecaca;
     }
 
     .stock-badge {
         display: inline-block;
-        padding: 0.2rem 0.5rem;
-        background-color: #fee2e2;
-        color: #b91c1c;
+        padding: 0.25rem 0.625rem;
         border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        background: #fee2e2;
+        color: #b91c1c;
         margin-left: 0.5rem;
     }
 
-    .low-stock {
-        background-color: #fff7ed;
+    .action-btns {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .icon-btn {
+        padding: 0.5rem;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-btn-edit {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .icon-btn-edit:hover {
+        background: #2563eb;
+    }
+
+    .icon-btn-view {
+        background: #10b981;
+        color: white;
+    }
+
+    .icon-btn-view:hover {
+        background: #059669;
+    }
+
+    .icon-btn-delete {
+        background: #ef4444;
+        color: white;
+    }
+
+    .icon-btn-delete:hover {
+        background: #dc2626;
+    }
+
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+        color: #9ca3af;
+    }
+
+    /* Pagination */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-top: 1.5rem;
+    }
+
+    .pagination-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .pagination-select {
+        border: 1px solid #d1d5db;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        background: white;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+    .pagination-links {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .pagination-links a,
+    .pagination-links span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 0.75rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #374151;
+        background: white;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+    }
+
+    .pagination-links a:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+    }
+
+    .pagination-links .active,
+    .pagination-links a.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (max-width: 1024px) {
+        .page-wrapper {
+            margin-left: 0;
+        }
+
+        .search-actions-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-form {
+            max-width: none;
+        }
     }
 </style>
 
-<!-- Main Content -->
-<main class="main-content p-6 md:p-8 lg:p-10">
-    <!-- Flash Message -->
-    <?php if (session()->getFlashdata('error')): ?>
-        <div id="errorAlert" class="error-message">
-            <?= session()->getFlashdata('error'); ?>
-        </div>
-    <?php endif; ?>
-    <?php if (session()->getFlashdata('success')): ?>
-        <div id="successAlert" class="success-message">
-            <?= session()->getFlashdata('success'); ?>
-        </div>
-    <?php endif; ?>
+<div class="page-wrapper">
+    <div class="page-content">
+        <!-- Flash Messages -->
+        <?php if (session()->getFlashdata('error')): ?>
+            <div class="alert-info" style="background: #fee2e2; border-color: #fecaca;">
+                <div class="alert-dot" style="background: #ef4444;"></div>
+                <span class="alert-text" style="color: #991b1b;"><?= session()->getFlashdata('error'); ?></span>
+            </div>
+        <?php endif; ?>
+        <?php if (session()->getFlashdata('success')): ?>
+            <div class="alert-info" style="background: #d1fae5; border-color: #a7f3d0;">
+                <div class="alert-dot" style="background: #10b981;"></div>
+                <span class="alert-text" style="color: #065f46;"><?= session()->getFlashdata('success'); ?></span>
+            </div>
+        <?php endif; ?>
 
-    <!-- Search -->
-    <div class="mb-4 flex items-center justify-between">
-        <form method="get" class="flex items-center gap-2">
-            <input type="text" name="keyword" value="<?= esc(service('request')->getVar('keyword')) ?>" placeholder="Search..."
-                class="px-3 py-2 border border-gray-300 rounded w-64 focus:outline-none focus:ring focus:ring-blue-200 text-sm" />
-            <button type="submit" class="px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition">Cari</button>
-            <?php if (service('request')->getVar('keyword') || service('request')->getVar('per_page')): ?>
-                <a href="<?= current_url() ?>" class="px-3 py-2 bg-gray-300 text-sm rounded hover:bg-gray-400 transition">Reset</a>
-            <?php endif; ?>
-        </form>
-    </div>
-
-    <!-- Table -->
-    <div class="table">
-        <div class="flex items-center gap-2 mb-2 text-sm text-gray-600">
-            <span class="inline-block w-3 h-3 rounded bg-red-400"></span>
-            <span>Menandakan stok berada pada atau di bawah minimum.</span>
-        </div>
-        <table class="min-w-full text-sm bg-white rounded shadow">
-            <thead class="bg-gray-200 text-gray-700 font-semibold">
-                <tr>
-                    <th class="p-3 text-left">No</th>
-                    <th class="p-3 text-left">Nama Barang</th>
-                    <th class="p-3 text-left">Jumlah</th>
-                    <th class="p-3 text-left">Satuan</th>
-                    <th class="p-3 text-left">Tgl Masuk</th>
-                    <th class="p-3 text-left">Barcode</th>
-                    <th class="p-3 text-left">Min Stok</th>
-                    <th class="p-3 text-center">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($barangList)): ?>
-                    <?php $no = 1;
-                    foreach ($barangList as $barang): ?>
-                        <?php $lowStock = ((int)($barang['jumlah'] ?? 0)) <= ((int)($barang['minimum_stok'] ?? 0)); ?>
-                        <tr class="border-t <?= $lowStock ? 'low-stock' : 'hover:bg-gray-50' ?>">
-                            <td class="p-3"><?= $no++ ?></td>
-                            <td class="p-3 font-semibold"><?= esc($barang['nama_barang']) ?></td>
-                            <td class="p-3 <?= $lowStock ? 'text-red-600 font-semibold' : '' ?>">
-                                <?= esc($barang['jumlah']) ?>
-                                <?php if ($lowStock): ?>
-                                    <span class="stock-badge">Minimum</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="p-3"><?= esc($barang['satuan']) ?></td>
-                            <td class="p-3"><?= esc($barang['tanggal_masuk']) ?></td>
-                            <td class="p-3 font-mono text-gray-600"><?= esc($barang['barcode']) ?></td>
-                            <td class="p-3"><?= esc($barang['minimum_stok']) ?></td>
-                            <td class="p-3 text-center">
-                                <div class="action-btns">
-                                    <!-- Edit -->
-                                    <button type="button" onclick="openModalEdit(<?= htmlspecialchars(json_encode($barang), ENT_QUOTES, 'UTF-8') ?>)"
-                                        class="icon-btn icon-btn-edit" title="Edit Barang">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <!-- Detail -->
-                                    <button type="button" onclick="openDetailModal(<?= htmlspecialchars(json_encode($barang), ENT_QUOTES, 'UTF-8') ?>)"
-                                        class="icon-btn icon-btn-view" title="Detail Barang">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <!-- Hapus -->
-                                    <form action="<?= base_url('admin/hapus-barang/' . $barang['id_barang']) ?>" method="post" class="form-hapus inline">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="icon-btn icon-btn-delete btn-hapus" title="Hapus Barang">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="8" class="text-center py-4 text-gray-500">Tidak ada data barang.</td>
-                    </tr>
+        <!-- Search Bar -->
+        <div class="search-actions-bar">
+            <form method="get" class="search-form">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="keyword" value="<?= esc(service('request')->getVar('keyword')) ?>"
+                        placeholder="Cari inventori..." class="search-input" />
+                </div>
+                <button type="submit" class="btn btn-primary">Cari</button>
+                <?php if (service('request')->getVar('keyword') || service('request')->getVar('per_page')): ?>
+                    <a href="<?= current_url() ?>" class="btn btn-secondary">Reset</a>
                 <?php endif; ?>
-            </tbody>
-        </table>
-        <div class="flex justify-between items-center mt-4 text-sm">
-            <div class="flex items-center gap-2">
-                <span>Rows per page</span>
+            </form>
+        </div>
+
+        <!-- Table Card -->
+        <div class="content-card">
+            <div class="alert-info" style="margin: 1rem 1.5rem 0 1.5rem; background: #fee2e2; border-color: #fecaca;">
+                <div class="alert-dot" style="background: #ef4444;"></div>
+                <span class="alert-text" style="color: #991b1b;">Menandakan stok berada pada atau di bawah minimum</span>
+            </div>
+
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Barang</th>
+                            <th>Jumlah</th>
+                            <th>Satuan</th>
+                            <th>Tgl Masuk</th>
+                            <th>Barcode</th>
+                            <th>Min Stok</th>
+                            <th class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($barangList)): ?>
+                            <?php $no = 1;
+                            foreach ($barangList as $barang): ?>
+                                <?php $lowStock = ((int)($barang['jumlah'] ?? 0)) <= ((int)($barang['minimum_stok'] ?? 0)); ?>
+                                <tr class="<?= $lowStock ? 'low-stock' : '' ?>">
+                                    <td><?= $no++ ?></td>
+                                    <td style="font-weight: 600;"><?= esc($barang['nama_barang']) ?></td>
+                                    <td class="<?= $lowStock ? 'text-red-600 font-semibold' : '' ?>">
+                                        <?= esc($barang['jumlah']) ?>
+                                        <?php if ($lowStock): ?>
+                                            <span class="stock-badge">Minimum</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?= esc($barang['satuan']) ?></td>
+                                    <td><?= esc($barang['tanggal_masuk']) ?></td>
+                                    <td style="font-family: monospace; font-size: 0.8125rem; color: #6b7280;"><?= esc($barang['barcode']) ?></td>
+                                    <td><?= esc($barang['minimum_stok']) ?></td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button type="button" onclick="openModalEdit(<?= htmlspecialchars(json_encode($barang), ENT_QUOTES, 'UTF-8') ?>)"
+                                                class="icon-btn icon-btn-edit" title="Edit">
+                                                <i class="fas fa-edit" style="width: 1rem; height: 1rem;"></i>
+                                            </button>
+                                            <button type="button" onclick="openDetailModal(<?= htmlspecialchars(json_encode($barang), ENT_QUOTES, 'UTF-8') ?>)"
+                                                class="icon-btn icon-btn-view" title="Detail">
+                                                <i class="fas fa-eye" style="width: 1rem; height: 1rem;"></i>
+                                            </button>
+                                            <form action="<?= base_url('admin/hapus-barang/' . $barang['id_barang']) ?>" method="post" class="form-hapus" style="display: inline;">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="icon-btn icon-btn-delete btn-hapus" title="Hapus">
+                                                    <i class="fas fa-trash" style="width: 1rem; height: 1rem;"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="8" class="empty-state">
+                                    Tidak ada data barang
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-wrapper">
+            <div class="pagination-info">
+                <span>Baris per halaman</span>
                 <form method="get">
                     <input type="hidden" name="keyword" value="<?= esc($keyword) ?>" />
-                    <select name="per_page" onchange="this.form.submit()" class="border border-gray-300 px-2 py-1 rounded">
+                    <select name="per_page" onchange="this.form.submit()" class="pagination-select">
                         <option value="5" <?= ($perPage == 5) ? 'selected' : '' ?>>5</option>
                         <option value="10" <?= ($perPage == 10) ? 'selected' : '' ?>>10</option>
                         <option value="25" <?= ($perPage == 25) ? 'selected' : '' ?>>25</option>
                     </select>
                 </form>
             </div>
-            <div class="flex items-center justify-center gap-2 mt-4">
+            <div class="pagination-links">
                 <?php if ($pager): ?>
-                    <div class="flex items-center space-x-1">
-                        <?= $pager->simpleLinks('number', 'tailwind_pagination') ?>
-                    </div>
+                    <?= $pager->simpleLinks('number', 'tailwind_pagination') ?>
                 <?php endif; ?>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal Edit Barang (Sama persis dengan User Kelola Barang) -->
-    <div id="modalEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 md:pl-72">
+<!-- Modal Edit Barang -->
+<div id="modalEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto relative">
             <button type="button" onclick="closeModal('modalEdit')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl z-10">&times;</button>
             
@@ -272,8 +538,8 @@
         </div>
     </div>
 
-    <!-- Modal Detail Barang (Sama persis dengan User Kelola Barang) -->
-    <div id="modalDetail" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 md:pl-72">
+<!-- Modal Detail Barang -->
+<div id="modalDetail" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto p-6 relative">
             <button type="button" onclick="closeModal('modalDetail')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl z-10">&times;</button>
             <h2 class="text-xl font-semibold mb-6 text-gray-800">Detail Barang</h2>
@@ -339,8 +605,6 @@
             </div>
         </div>
     </div>
-
-</main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
