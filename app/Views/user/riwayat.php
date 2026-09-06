@@ -810,13 +810,26 @@ document.getElementById('cetakExcel')?.addEventListener('click', function(e) {
     printDropdown.classList.add('hidden');
 });
 
-// Delete confirmation
+// Delete confirmation with SweetAlert2
 document.querySelectorAll('.btn-hapus').forEach(btn => {
     btn.addEventListener('click', function(e) {
         e.preventDefault();
-        if (confirm('Apakah Anda yakin ingin menghapus laporan ini?')) {
-            this.closest('form').submit();
-        }
+        const form = this.closest('form');
+        
+        Swal.fire({
+            title: 'Yakin ingin menghapus?',
+            text: 'Data laporan ini akan dihapus permanen.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#3b82f6',
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
     });
 });
 
