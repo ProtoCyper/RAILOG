@@ -1,68 +1,209 @@
-# CodeIgniter 4 Application Starter
+<p align="center">
+  <img src="public/assets/img/logo.png" alt="RAILOG Logo" width="120" height="120" style="object-fit: contain;">
+</p>
 
-## What is CodeIgniter?
+<h1 align="center">RAILOG</h1>
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+<p align="center">
+  <strong>Sistem Informasi Manajemen Inventaris & Logistik Gudang Terpadu</strong><br>
+  <em>Warehouse & Inventory Management System built with CodeIgniter 4</em>
+</p>
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+<p align="center">
+  <img src="https://img.shields.io/badge/PHP-^8.1-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP Version">
+  <img src="https://img.shields.io/badge/Framework-CodeIgniter%204-EF4444?style=flat-square&logo=codeigniter&logoColor=white" alt="CodeIgniter 4">
+  <img src="https://img.shields.io/badge/Database-MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white" alt="MySQL">
+  <img src="https://img.shields.io/badge/UI-Tailwind%20CSS%20%26%20Bootstrap%205-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind & Bootstrap">
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License">
+</p>
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+---
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## 📌 Tentang RAILOG
 
-## Installation & updates
+**RAILOG** adalah sistem informasi manajemen pergudangan dan logistik berbasis web yang dirancang untuk mengoptimalkan pengelolaan rantai pasok barang. Aplikasi ini menyediakan solusi komprehensif mulai dari pencatatan barang masuk (*inbound*), pemakaian/pengeluaran barang (*outbound*), monitoring stok minimum, pelabelan barcode terintegrasi, hingga pelaporan otomatis dalam format PDF dan Excel.
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+Sistem ini dirancang dengan pendekatan **Role-Based Access Control (RBAC)** yang memisahkan tanggung jawab antara level **Super Admin**, **Admin**, dan **Staff Gudang**, serta dilengkapi sistem audit aktivitas (*activity log*) untuk transparansi dan keamanan data operasional.
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+---
 
-## Setup
+## ✨ Fitur Utama
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+### 1. 🛡️ Multi-Level Access Control (RBAC)
+- **Super Admin**:
+  - Manajemen akun Administrator (Tambah, Edit, Hapus, Aktivasi Akun).
+  - Monitoring log aktivitas seluruh Admin secara komprehensif.
+  - Pengaturan profil dan kredensial akun Super Admin.
+- **Admin**:
+  - Manajemen master data inventaris barang & kategori.
+  - Pembuatan dan pengunduhan label barcode barang.
+  - Manajemen akun Staff Gudang (User).
+  - Rekapitulasi laporan mutasi barang masuk dan keluar dengan filter dinamis.
+  - Ekspor laporan ke format **Excel (.xlsx)** dan **PDF**.
+  - Monitoring log aktivitas seluruh staff operasional.
+- **Staff Gudang (User)**:
+  - Dashboard operasional dengan indikator stok barang dan peringatan stok minimum.
+  - Pencatatan transaksi **Barang Masuk** (stok baru atau restock item eksisting).
+  - Pencatatan transaksi **Barang Keluar** (pemakaian barang operasional).
+  - Unduh barcode dan cetak berkas Surat Jalan.
+  - Riwayat mutasi inventaris barang pribadi.
 
-## Important Change with index.php
+### 2. 🏷️ Manajemen Barcode & Identifikasi Item
+- Integrasi generator barcode otomatis berbasis standar SKU item menggunakan library `picqer/php-barcode-generator`.
+- Kemampuan cetak dan download barcode langsung untuk kebutuhan tagging fisik di gudang.
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+### 3. 📊 Pelaporan & Ekspor Data Fleksibel
+- Filter transaksi multi-mode:
+  - **Harian** (berdasarkan tanggal spesifik)
+  - **Mingguan** (berdasarkan tanggal awal minggu)
+  - **Bulanan** (berdasarkan periode bulan)
+  - **Rentang Kustom** (*start date* s/d *end date*)
+- Ekspor laporan berkualitas cetak:
+  - Format **Excel** menggunakan `PhpSpreadsheet`
+  - Format **PDF** menggunakan `Dompdf`
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+### 4. 📝 Audit Trail & Log Aktivitas
+- Pencatatan otomatis setiap aksi penting (login, perubahan data, transaksi barang, dsb.).
+- Perekaman data lengkap mencakup Nama Pengguna, Jenis Aktivitas, Alamat IP (*IP Address*), dan Waktu Kejadian.
 
-**Please** read the user guide for a better explanation of how CI4 works!
+### 5. 🔔 Notifikasi & Sinkronisasi Stok
+- Peringatan visual otomatis saat stok barang mencapai batas minimum.
+- Fitur *Auto-Sync* mutasi laporan dengan master stok barang untuk memastikan konsistensi data riil.
 
-## Repository Management
+---
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+## 🛠️ Teknologi & Pustaka
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+| Komponen | Teknologi / Library | Deskripsi |
+|---|---|---|
+| **Core Framework** | CodeIgniter 4 (PHP ^8.1) | Arsitektur MVC modern, ringan, dan cepat |
+| **Database** | MySQL / MariaDB | Relational Database Management System |
+| **Frontend Styling** | Tailwind CSS & Bootstrap 5 | Antarmuka responsif dan modern |
+| **Icons & Alerts** | FontAwesome 6 & SweetAlert2 | Ikonografi lengkap dan modal interaktif |
+| **Spreadsheet Engine** | `phpoffice/phpspreadsheet` | Pengolahan dan ekspor file Microsoft Excel |
+| **PDF Renderer** | `dompdf/dompdf` | Kompilasi HTML/CSS ke dokumen PDF |
+| **Barcode Engine** | `picqer/php-barcode-generator` | Pembuatan visual barcode inventaris |
+| **QR Code Engine** | `endroid/qr-code` | Generator kode QR sistem |
 
-## Server Requirements
+---
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+## 📋 Persyaratan Sistem
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+Sebelum menjalankan aplikasi, pastikan sistem Anda memenuhi persyaratan berikut:
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
+- **PHP**: Versi `8.1` atau lebih tinggi
+- **Ekstensi PHP yang Diperlukan**:
+  - `php-intl`
+  - `php-mbstring`
+  - `php-mysqlnd` / `pdo_mysql`
+  - `php-gd` (untuk manipulasi gambar dan barcode)
+  - `php-curl`
+  - `php-xml`
+- **Database**: MySQL 5.7+ atau MariaDB 10.3+
+- **Dependency Manager**: [Composer](https://getcomposer.org/) 2.x
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+---
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+## 🚀 Panduan Instalasi
+
+Ikuti langkah-langkah berikut untuk menginstal RAILOG di lingkungan lokal:
+
+### 1. Klon Repositori
+```bash
+git clone https://github.com/username/railog.git
+cd railog
+```
+
+### 2. Instal Dependensi Composer
+Jalankan perintah berikut untuk mengunduh semua pustaka yang dibutuhkan:
+```bash
+composer install
+```
+
+### 3. Konfigurasi Lingkungan (`.env`)
+Salin file konfigurasi `env` menjadi `.env`:
+```bash
+cp env .env
+```
+Buka file `.env` dan sesuaikan konfigurasi dasar:
+```ini
+CI_ENVIRONMENT = development
+
+# URL Aplikasi
+app.baseURL = 'http://localhost:8080/'
+
+# Konfigurasi Database
+database.default.hostname = localhost
+database.default.database = railog
+database.default.username = root
+database.default.password = 
+database.default.DBDriver = MySQLi
+database.default.port     = 3306
+```
+
+### 4. Setup Database
+1. Buat database baru di MySQL/phpMyAdmin dengan nama (misal: `railog`).
+2. Impor file skema database `railog.sql` yang tersedia di direktori *root* ke database yang baru dibuat:
+```bash
+mysql -u root -p railog < railog.sql
+```
+
+### 5. Jalankan Server Pengembangan
+Gunakan perintah CLI bawaan CodeIgniter 4:
+```bash
+php spark serve
+```
+Aplikasi sekarang dapat diakses melalui peramban web di:
+```text
+http://localhost:8080
+```
+
+---
+
+## 👥 Akun Bawaan (Default Credentials)
+
+Setelah mengimpor `railog.sql`, Anda dapat menggunakan akun pengujian berikut:
+
+| Peran (Role) | Email | Password Bawaan | Hak Akses |
+|---|---|---|---|
+| **Super Admin** | `admin1@gmail.com` | `admin123` *(atau password hash bawaan database)* | Akses penuh manajemen admin dan audit log global |
+| **Admin** | `admin2@gmail.com` | `admin123` | Manajemen stok barang, staff, dan laporan logistik |
+| **Staff Gudang** | `staff1@gmail.com` | `staff123` | Entri barang masuk/keluar, cetak surat jalan & barcode |
+
+> ⚠️ **Catatan Keamanan**: Harap segera ubah password bawaan setelah instalasi pertama kali melalui menu **Pengaturan Akun**.
+
+---
+
+## 📂 Struktur Direktori Proyek
+
+```plaintext
+RAILOG/
+├── app/
+│   ├── Config/           # Konfigurasi aplikasi, filter, dan routing
+│   ├── Controllers/      # Controller utama (Admin, SuperAdmin, User, Auth)
+│   ├── Helpers/          # Helper fungsi (tanggal, log aktivitas, dsb.)
+│   ├── Models/           # Model data (Barang, Laporan, Admin, Users, Notifikasi)
+│   └── Views/            # Template antarmuka (admin, superAdmin, user, layout)
+├── public/
+│   ├── assets/           # Berkas statis (CSS kustom, JavaScript, gambar, logo)
+│   └── index.php         # Front Controller utama
+├── writable/             # Direktori cache, logs, dan berkas unggahan
+├── railog.sql            # Skema dan data awal database MySQL
+├── composer.json         # Konfigurasi paket dan dependensi Composer
+└── README.md             # Dokumentasi proyek
+```
+
+---
+
+## 🔒 Keamanan & Praktik Terbaik
+
+- **Cross-Site Request Forgery (CSRF)**: Seluruh formulir POST dilindungi dengan token `<?= csrf_field() ?>`.
+- **Input Sanitization**: Menggunakan *query binding* dan escaping bawaan CodeIgniter 4 untuk mencegah serangan SQL Injection dan XSS.
+- **Akses Langsung**: File inti PHP berada di luar folder `public/`, memastikan file source code terlindungi dari eksekusi web langsung.
+- **Session Security**: Validasi filter berbasis peran di setiap grup routing untuk mencegah eskalasi hak akses (*privilege escalation*).
+
+---
+
+## 📄 Lisensi
+
+Proyek ini didistribusikan di bawah lisensi [MIT License](LICENSE). Anda bebas menggunakan, memodifikasi, dan mengembangkan perangkat lunak ini sesuai dengan ketentuan lisensi.
