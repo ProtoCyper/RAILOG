@@ -270,7 +270,7 @@
         <div class="header-content">
             <div class="header-title">
                 <h1>Log Aktivitas Admin</h1>
-                <p>Riwayat aktivitas semua Admin pada sistem.</p>
+                <p>Riwayat aktivitas semua Admin pada sistem</p>
             </div>
             <div class="header-actions">
                 <?php
