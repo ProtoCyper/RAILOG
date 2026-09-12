@@ -351,7 +351,7 @@
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#6c757d',
+                cancelButtonColor: '#d33',
                 confirmButtonText: 'Ya, Simpan',
                 cancelButtonText: 'Batal'
             }).then((result) => {

@@ -114,7 +114,7 @@ class AdminController extends BaseController
             'title'       => 'Profil Admin - RAILOG',
             'currentPage' => 'profil',
             'judul'       => 'Pengaturan Akun',
-            'subJudul'    => 'Kelola informasi akun Administrator anda',
+            'subJudul'    => 'Kelola informasi akun Administrator Anda',
             'admin'       => $admin,
         ];
 
