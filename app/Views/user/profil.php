@@ -215,7 +215,7 @@
                 <h2 class="profile-card-title">Informasi Akun</h2>
 
                 <?php if (session()->getFlashdata('error')): ?>
-                    <div class="profile-alert profile-alert-error">
+                    <div id="errorAlert" class="profile-alert profile-alert-error">
                         <?= session()->getFlashdata('error'); ?>
                     </div>
                 <?php endif; ?>
@@ -258,7 +258,7 @@
                 <h2 class="profile-card-title">Ganti Password</h2>
 
                 <?php if (session()->getFlashdata('errorp')): ?>
-                    <div class="profile-alert profile-alert-error">
+                    <div id="errorpAlert" class="profile-alert profile-alert-error">
                         <?= session()->getFlashdata('errorp'); ?>
                     </div>
                 <?php endif; ?>
@@ -323,16 +323,13 @@
 </div>
 
 <script>
-    // Auto-hide success alert after 3 seconds
-    ['successAlert', 'successpAlert'].forEach(function(id) {
-        let el = document.getElementById(id);
-        if (el) {
-            setTimeout(function() {
-                el.style.transition = 'opacity 0.5s ease';
-                el.style.opacity = '0';
-                setTimeout(function() { el.style.display = 'none'; }, 500);
-            }, 3000);
-        }
+    // Auto-hide alert messages after 3 seconds
+    document.querySelectorAll('.profile-alert').forEach(function(el) {
+        setTimeout(function() {
+            el.style.transition = 'opacity 0.5s ease';
+            el.style.opacity = '0';
+            setTimeout(function() { el.style.display = 'none'; }, 500);
+        }, 3000);
     });
 
     // Toggle password visibility
